@@ -1,0 +1,50 @@
+[ConsumerProcess6_5840] Connected to tcp://localhost:5556
+[ConsumerProcess6_5840] Waiting for frames...
+[ConsumerProcess6_5840] Frame: 499, Current Latency: 0.849 ms
+[ConsumerProcess6_5840] Frame: 999, Current Latency: 0.821 ms
+[ConsumerProcess6_5840] Frame: 1499, Current Latency: 1.181 ms
+[ConsumerProcess6_5840] Frame: 1999, Current Latency: 0.986 ms
+[ConsumerProcess6_5840] Frame: 2499, Current Latency: 1.232 ms
+[ConsumerProcess6_5840] Frame: 2999, Current Latency: 1.272 ms
+[ConsumerProcess6_5840] Frame: 3499, Current Latency: 1.146 ms
+[ConsumerProcess6_5840] Frame: 3999, Current Latency: 1.147 ms
+[ConsumerProcess6_5840] Frame: 4499, Current Latency: 1.065 ms
+[ConsumerProcess6_5840] Frame: 4999, Current Latency: 1.396 ms
+[ConsumerProcess6_5840] Frame: 5499, Current Latency: 1.221 ms
+[ConsumerProcess6_5840] Frame: 5999, Current Latency: 1.088 ms
+[ConsumerProcess6_5840] Frame: 6499, Current Latency: 1.166 ms
+[ConsumerProcess6_5840] Frame: 6999, Current Latency: 1.138 ms
+[ConsumerProcess6_5840] Frame: 7499, Current Latency: 1.206 ms
+[ConsumerProcess6_5840] Frame: 7999, Current Latency: 1.119 ms
+[ConsumerProcess6_5840] Frame: 8499, Current Latency: 1.042 ms
+[ConsumerProcess6_5840] Frame: 8999, Current Latency: 1.089 ms
+[ConsumerProcess6_5840] Frame: 9499, Current Latency: 1.046 ms
+[ConsumerProcess6_5840] Frame: 9999, Current Latency: 1.180 ms
+[ConsumerProcess6_5840] Frame: 10499, Current Latency: 1.246 ms
+[ConsumerProcess6_5840] Frame: 10999, Current Latency: 1.130 ms
+[ConsumerProcess6_5840] Frame: 11499, Current Latency: 1.180 ms
+[ConsumerProcess6_5840] Frame: 11999, Current Latency: 1.097 ms
+[ConsumerProcess6_5840] Frame: 12499, Current Latency: 1.072 ms
+[ConsumerProcess6_5840] Frame: 12999, Current Latency: 1.271 ms
+[ConsumerProcess6_5840] Frame: 13499, Current Latency: 1.257 ms
+[ConsumerProcess6_5840] Received end signal (single part).
+[ConsumerProcess6_5840] Resources released.
+[ConsumerProcess6_5840] Producer's final frame index: 13906
+[ConsumerProcess6_5840] Highest frame index received by consumer: 13906
+[ConsumerProcess6_5840] Total messages expected: 13907
+
+--- [ConsumerProcess6_5840] Latency Test Results (60s run) ---
+[ConsumerProcess6_5840] Frames Received: 13907
+[ConsumerProcess6_5840] Message Loss: 0 (All expected frames received)
+[ConsumerProcess6_5840] Test Duration (consumer perspective): 59.99 s
+[ConsumerProcess6_5840] Achieved FPS (consumer): 231.83
+[ConsumerProcess6_5840] Average Latency: 1.070 ms
+[ConsumerProcess6_5840] Min Latency    : 0.726 ms
+[ConsumerProcess6_5840] Max Latency    : 2.411 ms
+[ConsumerProcess6_5840] --- Latency Distribution ---
+[ConsumerProcess6_5840] < 1 ms         :    3524 frames ( 25.34%)
+[ConsumerProcess6_5840] 1-2 ms         :   10376 frames ( 74.61%)
+[ConsumerProcess6_5840] 2-3 ms         :       7 frames (  0.05%)
+[ConsumerProcess6_5840] 3-4 ms         :       0 frames (  0.00%)
+[ConsumerProcess6_5840] 4-5 ms         :       0 frames (  0.00%)
+[ConsumerProcess6_5840] >= 5 ms        :       0 frames (  0.00%)

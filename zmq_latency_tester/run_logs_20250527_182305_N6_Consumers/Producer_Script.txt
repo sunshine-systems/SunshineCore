@@ -1,0 +1,21 @@
+[Producer_10792] Starting up...
+[Producer_10792] Bound to tcp://localhost:5556
+[Producer_10792] Using actual screen grabber, size: 180x180
+[Producer_10792] Will send frames at MAX POSSIBLE RATE for 60 seconds.
+[Producer_10792] Waiting for consumer to connect (approx 1-2 seconds)...
+[Producer_10792] Starting frame sending loop...
+[Producer_10792] Status: Frames sent: 2105, Elapsed: 10.00s, Approx FPS this segment: 210.50
+[Producer_10792] Status: Frames sent: 4465, Elapsed: 20.01s, Approx FPS this segment: 236.00
+[Producer_10792] Status: Frames sent: 6834, Elapsed: 30.01s, Approx FPS this segment: 236.90
+[Producer_10792] Status: Frames sent: 9191, Elapsed: 40.01s, Approx FPS this segment: 235.70
+[Producer_10792] Status: Frames sent: 11563, Elapsed: 50.01s, Approx FPS this segment: 237.20
+
+[Producer_10792] --- Producer Summary (60s run) ---
+[Producer_10792] Total frames sent: 13907
+[Producer_10792] Actual duration: 60.00 seconds.
+[Producer_10792] Achieved FPS (Producer): 231.78
+[Producer_10792] Preparing to send end signal...
+[Producer_10792] Sent end signal with final frame index: 13906.
+[Producer_10792] Socket closed.
+[Producer_10792] Context terminated.
+[Producer_10792] Resources released. Exiting.

@@ -1,0 +1,28 @@
+Starting ZeroMQ Latency Test (Tue, May 27, 2025  6:23:05 PM)
+ - Number of Consumers: 6
+ - Project Directory: /c/Users/Jacob Tonna/Documents/GitHub/Orgs/Sunshine/sunshine.exe/zmq_latency_tester
+ - Individual process logs will be in: run_logs_20250527_182305_N6_Consumers
+ - Bash Script PID: 1728
+------------------------------------------
+Launching 6 Consumers...
+Attempting to start Consumer_1_Script: zmq_consumer_latency_test.py ConsumerProcess1. Logging to: run_logs_20250527_182305_N6_Consumers/Consumer_1_Script.txt
+Consumer_1_Script (pipenv run) started with Bash PID: 1734.
+Attempting to start Consumer_2_Script: zmq_consumer_latency_test.py ConsumerProcess2. Logging to: run_logs_20250527_182305_N6_Consumers/Consumer_2_Script.txt
+Consumer_2_Script (pipenv run) started with Bash PID: 1736.
+Attempting to start Consumer_3_Script: zmq_consumer_latency_test.py ConsumerProcess3. Logging to: run_logs_20250527_182305_N6_Consumers/Consumer_3_Script.txt
+Consumer_3_Script (pipenv run) started with Bash PID: 1738.
+Attempting to start Consumer_4_Script: zmq_consumer_latency_test.py ConsumerProcess4. Logging to: run_logs_20250527_182305_N6_Consumers/Consumer_4_Script.txt
+Consumer_4_Script (pipenv run) started with Bash PID: 1740.
+Attempting to start Consumer_5_Script: zmq_consumer_latency_test.py ConsumerProcess5. Logging to: run_logs_20250527_182305_N6_Consumers/Consumer_5_Script.txt
+Consumer_5_Script (pipenv run) started with Bash PID: 1742.
+Attempting to start Consumer_6_Script: zmq_consumer_latency_test.py ConsumerProcess6. Logging to: run_logs_20250527_182305_N6_Consumers/Consumer_6_Script.txt
+Consumer_6_Script (pipenv run) started with Bash PID: 1744.
+All consumers launched. Waiting for them to initialize (5s)...
+Launching Producer (60s run)...
+Producer logging to: run_logs_20250527_182305_N6_Consumers/Producer_Script.txt
+Producer process finished with exit code: 0
+------------------------------------------
+Producer has finished.
+Waiting for consumers to finish processing and log their summaries (approx 15 seconds)...
+Consumer Bash PIDs launched: 1734 1736 1738 1740 1742 1744
+Test script finished at Tue, May 27, 2025  6:24:32 PM.
