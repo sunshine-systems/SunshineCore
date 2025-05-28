@@ -1,0 +1,22 @@
+[FrameProducer_14020] Starting up...
+[FrameProducer_14020] Bound to Frame PUB endpoint tcp://*:5556
+[FrameProducer_14020] Using actual screen grabber, size: 80x80
+[FrameProducer_14020] Will send frames at MAX RATE for 60 seconds.
+[FrameProducer_14020] Waiting for consumers to connect (approx 2s)...
+[FrameProducer_14020] Starting frame sending loop...
+[FrameProducer_14020] Status: Frames sent: 1621, Elapsed: 10.00s, Approx FPS this segment: 162.08
+[FrameProducer_14020] Status: Frames sent: 3567, Elapsed: 20.00s, Approx FPS this segment: 194.55
+[FrameProducer_14020] Status: Frames sent: 5959, Elapsed: 30.00s, Approx FPS this segment: 239.17
+[FrameProducer_14020] Status: Frames sent: 8348, Elapsed: 40.01s, Approx FPS this segment: 238.82
+[FrameProducer_14020] Status: Frames sent: 10742, Elapsed: 50.01s, Approx FPS this segment: 239.34
+
+[FrameProducer_14020] --- Producer Summary (60s run) ---
+[FrameProducer_14020] Frame sending loop finished.
+[FrameProducer_14020] Total frames sent: 13128
+[FrameProducer_14020] Actual duration: 60.00 seconds.
+[FrameProducer_14020] Achieved FPS (Producer): 218.80
+[FrameProducer_14020] Preparing to send end signal...
+[FrameProducer_14020] Sent end signal with final frame index: 13127.
+[FrameProducer_14020] Socket closed.
+[FrameProducer_14020] Context terminated.
+[FrameProducer_14020] Resources released. Exiting.

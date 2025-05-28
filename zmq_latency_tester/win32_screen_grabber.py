@@ -7,7 +7,7 @@ import time
 from screeninfo import get_monitors
 
 class MockRuntimeSettings:
-    def __init__(self, screenshot_size=180, offset_x=0, offset_y=0, enable_cv_display=False):
+    def __init__(self, screenshot_size=80, offset_x=0, offset_y=0, enable_cv_display=False):
         class SystemSettings:
             def __init__(self):
                 self.screenshotSize = screenshot_size

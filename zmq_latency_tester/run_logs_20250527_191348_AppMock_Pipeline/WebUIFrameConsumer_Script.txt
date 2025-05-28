@@ -1,0 +1,52 @@
+[WebUIFrameConsumer_10600] Connected to FRAME PRODUCER at tcp://localhost:5556
+[WebUIFrameConsumer_10600] Connected to COORD HANDLER (SunBoxInterface) at tcp://localhost:5557
+[WebUIFrameConsumer_10600] Waiting for frames...
+[WebUIFrameConsumer_10600] Frame Idx: 499, Frame Recv Latency: 0.434 ms
+[WebUIFrameConsumer_10600] Frame Idx: 999, Frame Recv Latency: 0.487 ms
+[WebUIFrameConsumer_10600] Frame Idx: 1499, Frame Recv Latency: 0.419 ms
+[WebUIFrameConsumer_10600] Frame Idx: 1999, Frame Recv Latency: 0.425 ms
+[WebUIFrameConsumer_10600] Frame Idx: 2499, Frame Recv Latency: 0.572 ms
+[WebUIFrameConsumer_10600] Frame Idx: 2999, Frame Recv Latency: 0.475 ms
+[WebUIFrameConsumer_10600] Frame Idx: 3499, Frame Recv Latency: 0.468 ms
+[WebUIFrameConsumer_10600] Frame Idx: 3999, Frame Recv Latency: 0.438 ms
+[WebUIFrameConsumer_10600] Frame Idx: 4499, Frame Recv Latency: 0.447 ms
+[WebUIFrameConsumer_10600] Frame Idx: 4999, Frame Recv Latency: 0.440 ms
+[WebUIFrameConsumer_10600] Frame Idx: 5499, Frame Recv Latency: 0.582 ms
+[WebUIFrameConsumer_10600] Frame Idx: 5999, Frame Recv Latency: 0.454 ms
+[WebUIFrameConsumer_10600] Frame Idx: 6499, Frame Recv Latency: 0.429 ms
+[WebUIFrameConsumer_10600] Frame Idx: 6999, Frame Recv Latency: 0.460 ms
+[WebUIFrameConsumer_10600] Frame Idx: 7499, Frame Recv Latency: 0.463 ms
+[WebUIFrameConsumer_10600] Frame Idx: 7999, Frame Recv Latency: 0.495 ms
+[WebUIFrameConsumer_10600] Frame Idx: 8499, Frame Recv Latency: 0.442 ms
+[WebUIFrameConsumer_10600] Frame Idx: 8999, Frame Recv Latency: 0.434 ms
+[WebUIFrameConsumer_10600] Frame Idx: 9499, Frame Recv Latency: 0.571 ms
+[WebUIFrameConsumer_10600] Frame Idx: 9999, Frame Recv Latency: 0.447 ms
+[WebUIFrameConsumer_10600] Frame Idx: 10499, Frame Recv Latency: 0.480 ms
+[WebUIFrameConsumer_10600] Frame Idx: 10999, Frame Recv Latency: 0.520 ms
+[WebUIFrameConsumer_10600] Frame Idx: 11499, Frame Recv Latency: 0.576 ms
+[WebUIFrameConsumer_10600] Frame Idx: 11999, Frame Recv Latency: 0.523 ms
+[WebUIFrameConsumer_10600] Frame Idx: 12499, Frame Recv Latency: 0.620 ms
+[WebUIFrameConsumer_10600] Frame Idx: 12999, Frame Recv Latency: 0.591 ms
+[WebUIFrameConsumer_10600] Received END SIGNAL from FRAME PRODUCER.
+[WebUIFrameConsumer_10600] Main loop finished. Sending 'done_sending_coords' to SunBoxInterface.
+[WebUIFrameConsumer_10600] Resources released.
+[WebUIFrameConsumer_10600] Original Producer's final frame index: 13127
+[WebUIFrameConsumer_10600] Highest frame index received: 13127
+[WebUIFrameConsumer_10600] Total frames expected from Original Producer: 13128
+
+--- [WebUIFrameConsumer_10600] FRAME RECEPTION Summary (from a ~60s run) ---
+[WebUIFrameConsumer_10600] Frames Received: 13128
+[WebUIFrameConsumer_10600] Frame Loss from Original Producer: 0
+[WebUIFrameConsumer_10600] Test Duration (frame recv perspective): 60.00 s
+[WebUIFrameConsumer_10600] Achieved FPS (frame recv): 218.82
+[WebUIFrameConsumer_10600] Avg Frame Latency: 0.444 ms
+[WebUIFrameConsumer_10600] Min Frame Latency: 0.240 ms
+[WebUIFrameConsumer_10600] Max Frame Latency: 3.445 ms
+[WebUIFrameConsumer_10600] --- Frame Latency Distribution ---
+[WebUIFrameConsumer_10600] < 1 ms         :   13121 frames ( 99.95%)
+[WebUIFrameConsumer_10600] 1-2 ms         :       3 frames (  0.02%)
+[WebUIFrameConsumer_10600] 2-3 ms         :       3 frames (  0.02%)
+[WebUIFrameConsumer_10600] 3-4 ms         :       1 frames (  0.01%)
+[WebUIFrameConsumer_10600] 4-5 ms         :       0 frames (  0.00%)
+[WebUIFrameConsumer_10600] >= 5 ms        :       0 frames (  0.00%)
+[WebUIFrameConsumer_10600] Total Coordinates Sent to SunBoxInterface: 13128
