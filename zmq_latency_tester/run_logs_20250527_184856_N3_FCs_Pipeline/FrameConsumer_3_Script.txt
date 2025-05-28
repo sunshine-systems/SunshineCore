@@ -1,0 +1,53 @@
+[FrameConsumer3_23076] Connected to FRAME PRODUCER at tcp://localhost:5556
+[FrameConsumer3_23076] Connected to COORD HANDLER at tcp://localhost:5557
+[FrameConsumer3_23076] Waiting for frames...
+[FrameConsumer3_23076] Frame Idx: 499, Frame Recv Latency: 0.975 ms
+[FrameConsumer3_23076] Frame Idx: 999, Frame Recv Latency: 1.144 ms
+[FrameConsumer3_23076] Frame Idx: 1499, Frame Recv Latency: 0.919 ms
+[FrameConsumer3_23076] Frame Idx: 1999, Frame Recv Latency: 1.218 ms
+[FrameConsumer3_23076] Frame Idx: 2499, Frame Recv Latency: 1.148 ms
+[FrameConsumer3_23076] Frame Idx: 2999, Frame Recv Latency: 1.292 ms
+[FrameConsumer3_23076] Frame Idx: 3499, Frame Recv Latency: 1.547 ms
+[FrameConsumer3_23076] Frame Idx: 3999, Frame Recv Latency: 1.242 ms
+[FrameConsumer3_23076] Frame Idx: 4499, Frame Recv Latency: 1.220 ms
+[FrameConsumer3_23076] Frame Idx: 4999, Frame Recv Latency: 1.617 ms
+[FrameConsumer3_23076] Frame Idx: 5499, Frame Recv Latency: 0.974 ms
+[FrameConsumer3_23076] Frame Idx: 5999, Frame Recv Latency: 0.916 ms
+[FrameConsumer3_23076] Frame Idx: 6499, Frame Recv Latency: 1.393 ms
+[FrameConsumer3_23076] Frame Idx: 6999, Frame Recv Latency: 1.233 ms
+[FrameConsumer3_23076] Frame Idx: 7499, Frame Recv Latency: 0.994 ms
+[FrameConsumer3_23076] Frame Idx: 7999, Frame Recv Latency: 1.304 ms
+[FrameConsumer3_23076] Frame Idx: 8499, Frame Recv Latency: 1.179 ms
+[FrameConsumer3_23076] Frame Idx: 8999, Frame Recv Latency: 1.168 ms
+[FrameConsumer3_23076] Frame Idx: 9499, Frame Recv Latency: 1.009 ms
+[FrameConsumer3_23076] Frame Idx: 9999, Frame Recv Latency: 1.189 ms
+[FrameConsumer3_23076] Frame Idx: 10499, Frame Recv Latency: 1.121 ms
+[FrameConsumer3_23076] Frame Idx: 10999, Frame Recv Latency: 1.319 ms
+[FrameConsumer3_23076] Frame Idx: 11499, Frame Recv Latency: 1.301 ms
+[FrameConsumer3_23076] Frame Idx: 11999, Frame Recv Latency: 1.175 ms
+[FrameConsumer3_23076] Frame Idx: 12499, Frame Recv Latency: 1.293 ms
+[FrameConsumer3_23076] Frame Idx: 12999, Frame Recv Latency: 1.220 ms
+[FrameConsumer3_23076] Frame Idx: 13499, Frame Recv Latency: 0.958 ms
+[FrameConsumer3_23076] Received END SIGNAL from FRAME PRODUCER.
+[FrameConsumer3_23076] Main loop finished. Sending 'done_sending_coords' signal to COORD HANDLER.
+[FrameConsumer3_23076] Resources released.
+[FrameConsumer3_23076] Original Producer's final frame index: 13523
+[FrameConsumer3_23076] Highest frame index received: 13523
+[FrameConsumer3_23076] Total frames expected from Original Producer: 13524
+
+--- [FrameConsumer3_23076] FRAME RECEPTION Summary (60s run) ---
+[FrameConsumer3_23076] Frames Received: 13524
+[FrameConsumer3_23076] Frame Loss from Original Producer: 0
+[FrameConsumer3_23076] Test Duration (frame recv perspective): 59.99 s
+[FrameConsumer3_23076] Achieved FPS (frame recv): 225.42
+[FrameConsumer3_23076] Avg Frame Latency: 1.130 ms
+[FrameConsumer3_23076] Min Frame Latency: 0.774 ms
+[FrameConsumer3_23076] Max Frame Latency: 32.442 ms
+[FrameConsumer3_23076] --- Frame Latency Distribution ---
+[FrameConsumer3_23076] < 1 ms         :    3936 frames ( 29.10%)
+[FrameConsumer3_23076] 1-2 ms         :    9542 frames ( 70.56%)
+[FrameConsumer3_23076] 2-3 ms         :      19 frames (  0.14%)
+[FrameConsumer3_23076] 3-4 ms         :      14 frames (  0.10%)
+[FrameConsumer3_23076] 4-5 ms         :       6 frames (  0.04%)
+[FrameConsumer3_23076] >= 5 ms        :       7 frames (  0.05%)
+[FrameConsumer3_23076] Total Coordinates Sent to CoordHandler: 13524

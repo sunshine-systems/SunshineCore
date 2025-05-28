@@ -1,0 +1,64 @@
+[CoordHandler_7916] Starting up. Expecting 'done' signals from 3 Frame Consumers.
+[CoordHandler_7916] Bound to PULL endpoint tcp://*:5557
+[CoordHandler_7916] Waiting for coordinates...
+[CoordHandler_7916] Coords Rcvd: 1000, Last Latency (from FrameConsumer2_17456, frame 333): 0.144 ms
+[CoordHandler_7916] Coords Rcvd: 2000, Last Latency (from FrameConsumer2_17456, frame 666): 0.172 ms
+[CoordHandler_7916] Coords Rcvd: 3000, Last Latency (from FrameConsumer2_17456, frame 999): 0.404 ms
+[CoordHandler_7916] Coords Rcvd: 4000, Last Latency (from FrameConsumer1_4208, frame 1333): 0.208 ms
+[CoordHandler_7916] Coords Rcvd: 5000, Last Latency (from FrameConsumer2_17456, frame 1666): 0.169 ms
+[CoordHandler_7916] Coords Rcvd: 6000, Last Latency (from FrameConsumer3_23076, frame 1999): 0.243 ms
+[CoordHandler_7916] Coords Rcvd: 7000, Last Latency (from FrameConsumer2_17456, frame 2333): 0.301 ms
+[CoordHandler_7916] Coords Rcvd: 8000, Last Latency (from FrameConsumer2_17456, frame 2666): 0.168 ms
+[CoordHandler_7916] Coords Rcvd: 9000, Last Latency (from FrameConsumer2_17456, frame 2999): 0.425 ms
+[CoordHandler_7916] Coords Rcvd: 10000, Last Latency (from FrameConsumer1_4208, frame 3333): 0.164 ms
+[CoordHandler_7916] Coords Rcvd: 11000, Last Latency (from FrameConsumer2_17456, frame 3666): 0.235 ms
+[CoordHandler_7916] Coords Rcvd: 12000, Last Latency (from FrameConsumer3_23076, frame 3999): 0.300 ms
+[CoordHandler_7916] Coords Rcvd: 13000, Last Latency (from FrameConsumer1_4208, frame 4333): 0.176 ms
+[CoordHandler_7916] Coords Rcvd: 14000, Last Latency (from FrameConsumer2_17456, frame 4666): 0.194 ms
+[CoordHandler_7916] Coords Rcvd: 15000, Last Latency (from FrameConsumer3_23076, frame 4999): 0.180 ms
+[CoordHandler_7916] Coords Rcvd: 16000, Last Latency (from FrameConsumer1_4208, frame 5333): 0.186 ms
+[CoordHandler_7916] Coords Rcvd: 17000, Last Latency (from FrameConsumer2_17456, frame 5666): 0.181 ms
+[CoordHandler_7916] Coords Rcvd: 18000, Last Latency (from FrameConsumer3_23076, frame 5999): 0.229 ms
+[CoordHandler_7916] Coords Rcvd: 19000, Last Latency (from FrameConsumer2_17456, frame 6333): 0.241 ms
+[CoordHandler_7916] Coords Rcvd: 20000, Last Latency (from FrameConsumer2_17456, frame 6666): 0.183 ms
+[CoordHandler_7916] Coords Rcvd: 21000, Last Latency (from FrameConsumer2_17456, frame 6999): 0.270 ms
+[CoordHandler_7916] Coords Rcvd: 22000, Last Latency (from FrameConsumer1_4208, frame 7333): 0.149 ms
+[CoordHandler_7916] Coords Rcvd: 23000, Last Latency (from FrameConsumer2_17456, frame 7666): 0.151 ms
+[CoordHandler_7916] Coords Rcvd: 24000, Last Latency (from FrameConsumer3_23076, frame 7999): 0.249 ms
+[CoordHandler_7916] Coords Rcvd: 25000, Last Latency (from FrameConsumer1_4208, frame 8333): 0.160 ms
+[CoordHandler_7916] Coords Rcvd: 26000, Last Latency (from FrameConsumer2_17456, frame 8666): 0.174 ms
+[CoordHandler_7916] Coords Rcvd: 27000, Last Latency (from FrameConsumer3_23076, frame 8999): 0.248 ms
+[CoordHandler_7916] Coords Rcvd: 28000, Last Latency (from FrameConsumer1_4208, frame 9333): 0.301 ms
+[CoordHandler_7916] Coords Rcvd: 29000, Last Latency (from FrameConsumer2_17456, frame 9666): 0.189 ms
+[CoordHandler_7916] Coords Rcvd: 30000, Last Latency (from FrameConsumer3_23076, frame 9999): 0.221 ms
+[CoordHandler_7916] Coords Rcvd: 31000, Last Latency (from FrameConsumer1_4208, frame 10333): 0.165 ms
+[CoordHandler_7916] Coords Rcvd: 32000, Last Latency (from FrameConsumer1_4208, frame 10666): 0.301 ms
+[CoordHandler_7916] Coords Rcvd: 33000, Last Latency (from FrameConsumer2_17456, frame 10999): 0.273 ms
+[CoordHandler_7916] Coords Rcvd: 34000, Last Latency (from FrameConsumer1_4208, frame 11333): 0.231 ms
+[CoordHandler_7916] Coords Rcvd: 35000, Last Latency (from FrameConsumer2_17456, frame 11666): 0.160 ms
+[CoordHandler_7916] Coords Rcvd: 36000, Last Latency (from FrameConsumer3_23076, frame 11999): 0.234 ms
+[CoordHandler_7916] Coords Rcvd: 37000, Last Latency (from FrameConsumer1_4208, frame 12333): 0.161 ms
+[CoordHandler_7916] Coords Rcvd: 38000, Last Latency (from FrameConsumer1_4208, frame 12666): 0.216 ms
+[CoordHandler_7916] Coords Rcvd: 39000, Last Latency (from FrameConsumer3_23076, frame 12999): 0.257 ms
+[CoordHandler_7916] Coords Rcvd: 40000, Last Latency (from FrameConsumer1_4208, frame 13333): 0.164 ms
+[CoordHandler_7916] Received 'done_sending_coords' signal from FrameConsumer2_17456.
+[CoordHandler_7916] Received 'done_sending_coords' signal from FrameConsumer1_4208.
+[CoordHandler_7916] Received 'done_sending_coords' signal from FrameConsumer3_23076.
+[CoordHandler_7916] All 3 expected 'done' signals received. Will process remaining queue then exit.
+[CoordHandler_7916] Timed out waiting for coordinate message. Done signals rcvd: 3/3.
+[CoordHandler_7916] Resources released.
+
+[CoordHandler_7916] --- Coordinate Reception Summary (60s run) ---
+[CoordHandler_7916] Total Coordinates Received: 40572
+[CoordHandler_7916] 'Done' signals received from FrameConsumers: 3/3
+[CoordHandler_7916] Avg Coord Latency: 0.173 ms
+[CoordHandler_7916] Min Coord Latency: 0.082 ms
+[CoordHandler_7916] Max Coord Latency: 2.388 ms
+[CoordHandler_7916] --- Coordinate Latency Distribution ---
+[CoordHandler_7916] < 1 ms         :    40568 coords ( 99.99%)
+[CoordHandler_7916] 1-2 ms         :        3 coords (  0.01%)
+[CoordHandler_7916] 2-3 ms         :        1 coords (  0.00%)
+[CoordHandler_7916] 3-4 ms         :        0 coords (  0.00%)
+[CoordHandler_7916] 4-5 ms         :        0 coords (  0.00%)
+[CoordHandler_7916] 5-10 ms        :        0 coords (  0.00%)
+[CoordHandler_7916] >= 10 ms       :        0 coords (  0.00%)

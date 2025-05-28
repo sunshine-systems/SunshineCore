@@ -1,0 +1,26 @@
+Starting ZeroMQ 2-Stage Pipeline Test (Tue, May 27, 2025  6:48:56 PM)
+ - Number of Frame Consumers: 3
+ - Project Directory: /c/Users/Jacob Tonna/Documents/GitHub/Orgs/Sunshine/sunshine.exe/zmq_latency_tester
+ - Individual process logs will be in: run_logs_20250527_184856_N3_FCs_Pipeline
+ - Bash Script PID: 2160
+------------------------------------------
+Launching Frame Coordinate Handler...
+Starting Frame_Coord_Handler_Script: zmq_frame_coord_handler.py 3. Logging to: run_logs_20250527_184856_N3_FCs_Pipeline/Frame_Coord_Handler_Script.txt
+Frame_Coord_Handler_Script (pipenv run) started with Bash PID: 2165.
+Launching 3 Frame Consumers...
+Starting FrameConsumer_1_Script: zmq_consumer_latency_test.py FrameConsumer1. Logging to: run_logs_20250527_184856_N3_FCs_Pipeline/FrameConsumer_1_Script.txt
+FrameConsumer_1_Script (pipenv run) started with Bash PID: 2168.
+Starting FrameConsumer_2_Script: zmq_consumer_latency_test.py FrameConsumer2. Logging to: run_logs_20250527_184856_N3_FCs_Pipeline/FrameConsumer_2_Script.txt
+FrameConsumer_2_Script (pipenv run) started with Bash PID: 2170.
+Starting FrameConsumer_3_Script: zmq_consumer_latency_test.py FrameConsumer3. Logging to: run_logs_20250527_184856_N3_FCs_Pipeline/FrameConsumer_3_Script.txt
+FrameConsumer_3_Script (pipenv run) started with Bash PID: 2172.
+All Frame Consumers launched. Waiting (5s)...
+Launching Main Frame Producer (60s run)...
+Main Frame Producer logging to: run_logs_20250527_184856_N3_FCs_Pipeline/Main_Frame_Producer_Script.txt
+Main Frame Producer process finished with exit code: 0
+------------------------------------------
+Main Frame Producer has finished.
+Waiting for Frame Consumers and Coord Handler to finish (approx 20-25 seconds)...
+Frame Consumer Bash PIDs launched: 2168 2170 2172
+Frame Coord Handler Bash PID: 2165
+Test script finished at Tue, May 27, 2025  6:50:35 PM.

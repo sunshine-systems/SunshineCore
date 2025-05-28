@@ -5,14 +5,14 @@ import time
 import msgpack
 import os
 
-from win32_screen_grabber import Win32ScreenGrabber
+from win32_screen_grabber import Win32ScreenGrabber # Make sure this is in the same dir or pythonpath
 
 # --- Configuration ---
-ZMQ_ENDPOINT = "tcp://localhost:5556"
+ZMQ_ENDPOINT = "tcp://*:5556" # PUB socket binds here
 
 SCREENSHOT_SIZE = 180
-USE_ACTUAL_SCREENGRAB = True # Set to False to test ZMQ/Python overhead only
-TEST_DURATION_SECONDS = 60 # <<<< CHANGED TO 60 SECONDS
+USE_ACTUAL_SCREENGRAB = True 
+TEST_DURATION_SECONDS = 60 
 PRODUCER_LOG_PREFIX = f"[Producer_{os.getpid()}]"
 
 def main():
@@ -20,11 +20,7 @@ def main():
 
     context = zmq.Context()
     socket = context.socket(zmq.PUB)
-    # Set a high water mark to prevent excessive memory usage if consumers are slow
-    # This might cause message drops if consumers can't keep up, which is what we want to see
-    # Default is 1000 for PUB. Let's keep it or make it moderately high.
-    # socket.set_hwm(2000) # Optional: experiment with HWM
-
+    
     try:
         socket.bind(ZMQ_ENDPOINT)
         print(f"{PRODUCER_LOG_PREFIX} Bound to {ZMQ_ENDPOINT}")
@@ -45,12 +41,12 @@ def main():
     start_time = time.perf_counter()
     frames_sent = 0
     last_log_time = start_time
-    log_interval_seconds = 10 # Log status every 10 seconds for a 60s run
+    log_interval_seconds = 10 
+    main.last_frames_sent_in_segment = 0 # Initialize for segment FPS
 
     try:
         print(f"{PRODUCER_LOG_PREFIX} Starting frame sending loop...")
         while (time.perf_counter() - start_time) < TEST_DURATION_SECONDS:
-            # ... (rest of the frame grabbing/generation logic remains the same) ...
             if USE_ACTUAL_SCREENGRAB:
                 frame_bgr = grabber.screen_grab_BGR()
                 if frame_bgr is None or frame_bgr.size == 0 :
@@ -71,8 +67,6 @@ def main():
             payload = frame_bgr.tobytes()
 
             try:
-                # For PUB sockets, send is non-blocking by default if HWM is reached (messages dropped)
-                # If you want to understand backpressure, you might need different socket types or options.
                 socket.send(msgpack.packb(metadata), zmq.SNDMORE)
                 socket.send(payload)
             except zmq.error.ZMQError as e:
@@ -83,26 +77,21 @@ def main():
 
             current_time = time.perf_counter()
             if current_time - last_log_time >= log_interval_seconds:
-                current_fps_segment = (frames_sent - getattr(main, 'last_frames_sent', 0)) / log_interval_seconds
-                main.last_frames_sent = frames_sent # Store for next segment calculation
+                frames_this_segment = frames_sent - main.last_frames_sent_in_segment
+                current_fps_segment = frames_this_segment / (current_time - last_log_time)
+                main.last_frames_sent_in_segment = frames_sent 
                 print(f"{PRODUCER_LOG_PREFIX} Status: Frames sent: {frames_sent}, Elapsed: {current_time - start_time:.2f}s, Approx FPS this segment: {current_fps_segment:.2f}")
                 last_log_time = current_time
         
-        # Initialize last_frames_sent for the first segment
-        if not hasattr(main, 'last_frames_sent'):
-            main.last_frames_sent = 0
-
-
         actual_duration = time.perf_counter() - start_time
         achieved_producer_fps = frames_sent / actual_duration if actual_duration > 0 else 0
         
         print(f"\n{PRODUCER_LOG_PREFIX} --- Producer Summary (60s run) ---")
-        # ... (rest of summary print statements remain similar) ...
+        print(f"{PRODUCER_LOG_PREFIX} Frame sending loop finished.")
         print(f"{PRODUCER_LOG_PREFIX} Total frames sent: {frames_sent}")
         print(f"{PRODUCER_LOG_PREFIX} Actual duration: {actual_duration:.2f} seconds.")
         print(f"{PRODUCER_LOG_PREFIX} Achieved FPS (Producer): {achieved_producer_fps:.2f}")
 
-    # ... (except, finally blocks remain similar) ...
     except KeyboardInterrupt:
         print(f"{PRODUCER_LOG_PREFIX} Interrupted by user.")
     except Exception as e:
@@ -114,14 +103,13 @@ def main():
             if not socket.closed:
                 socket.send(msgpack.packb(end_metadata))
                 print(f"{PRODUCER_LOG_PREFIX} Sent end signal with final frame index: {end_metadata['final_frame_index']}.")
-        except Exception as e: # Catch generic exception for robustness
+        except Exception as e:
             print(f"{PRODUCER_LOG_PREFIX} Error sending end signal: {e}")
 
         if not socket.closed: socket.close(); print(f"{PRODUCER_LOG_PREFIX} Socket closed.")
         if not context.closed: context.term(); print(f"{PRODUCER_LOG_PREFIX} Context terminated.")
         print(f"{PRODUCER_LOG_PREFIX} Resources released. Exiting.")
 
-
 if __name__ == "__main__":
-    main.last_frames_sent = 0 # Initialize for periodic FPS calculation
+    main.last_frames_sent_in_segment = 0 # Initialize for periodic FPS calculation
     main()

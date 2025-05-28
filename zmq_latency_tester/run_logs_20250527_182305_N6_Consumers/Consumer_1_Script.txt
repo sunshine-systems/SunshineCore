@@ -1,7 +1,0 @@
-[ConsumerProcess1_11516] Connected to tcp://localhost:5556
-[ConsumerProcess1_11516] Waiting for frames...
-[ConsumerProcess1_11516] Timed out waiting for message. Assuming producer stopped or test ended.
-[ConsumerProcess1_11516] Resources released.
-
---- [ConsumerProcess1_11516] Latency Test Results (60s run) ---
-[ConsumerProcess1_11516] No frames processed or no latencies recorded.
