@@ -1,2 +1,0 @@
-# sunshine.exe
-
