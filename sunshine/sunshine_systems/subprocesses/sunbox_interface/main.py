@@ -15,8 +15,12 @@ import time
 
 class SunBoxInterface(BaseSubProcess):
     def __init__(self):
+        # Set the subprocess name
         super().__init__("SunBoxInterface")
+        
+        # Custom initialization for SunBoxInterface
         self.custom_data = {}
+        self.iteration_count = 0
         print(f"SunBoxInterface: Initialized with PID {os.getpid()}")
     
     def handle_custom_message(self, message):
@@ -26,18 +30,22 @@ class SunBoxInterface(BaseSubProcess):
             payload = message.get('payload', {})
             sender = message.get('sender')
             
-            # Example: Handle custom message types
+            # Handle SunBox-specific message types
             if msg_type == 'SUNBOX_COMMAND':
                 self.handle_sunbox_command(payload)
             
+            elif msg_type == 'SUNBOX_STATUS':
+                self.handle_sunbox_status(payload, sender)
+            
             elif msg_type == MSG_LOG:
-                # Process log messages from other components
+                # Process log messages from other components if needed
                 log_level = payload.get('level', 'INFO')
                 log_message = payload.get('message', '')
-                print(f"SunBoxInterface: Received log [{log_level}] from {sender}: {log_message}")
-                
+                # Uncomment to see logs from other processes:
+                # print(f"SunBoxInterface: Received log [{log_level}] from {sender}: {log_message}")
+            
         except Exception as e:
-            crash_logger("sunbox_interface_message_handling", e)
+            crash_logger(f"{self.process_name}_message_handling", e)
             print(f"SunBoxInterface: Error handling message: {e}")
     
     def handle_sunbox_command(self, payload):
@@ -63,42 +71,87 @@ class SunBoxInterface(BaseSubProcess):
                         'key': key,
                         'value': self.custom_data[key]
                     })
-                    
+                    print(f"SunBoxInterface: Retrieved data {key} = {self.custom_data[key]}")
+            
         except Exception as e:
-            crash_logger("sunbox_interface_command_handling", e)
+            crash_logger(f"{self.process_name}_command_handling", e)
             print(f"SunBoxInterface: Error handling command: {e}")
     
-    def main_loop(self):
-        """Custom main loop for SunBoxInterface."""
+    def handle_sunbox_status(self, payload, sender):
+        """Handle status messages from other SunBox components."""
         try:
-            counter = 0
+            self.log_info(f"Received status from {sender}: {payload}")
+            print(f"SunBoxInterface: Status from {sender}: {payload}")
+            
+        except Exception as e:
+            crash_logger(f"{self.process_name}_status_handling", e)
+            print(f"SunBoxInterface: Error handling status: {e}")
+    
+    def main_loop(self):
+        """Main processing loop for SunBoxInterface."""
+        try:
             print("SunBoxInterface: Starting main loop...")
             
             while not self.shutdown_flag.is_set():
-                counter += 1
+                self.iteration_count += 1
                 
-                # Send periodic hello world log
-                message = f"SunBoxInterface Hello World #{counter}"
-                self.log_info(message)
-                print(f"SunBoxInterface: {message}")
+                # Simple demo: Hello world every 5 seconds
+                hello_message = f"SunBoxInterface Hello World #{self.iteration_count}"
+                self.log_info(hello_message)
+                print(f"SunBoxInterface: {hello_message}")
                 
-                # Example: Send custom data every 10 iterations
-                if counter % 10 == 0:
-                    status_msg = {
-                        'iteration': counter,
-                        'data_items': len(self.custom_data),
-                        'status': 'running'
-                    }
-                    self.send_message('SUNBOX_STATUS', status_msg)
-                    print(f"SunBoxInterface: Sent status update: {status_msg}")
+                # Do SunBox-specific work
+                self.do_sunbox_work()
                 
-                # Sleep for 5 seconds
+                # Send periodic status updates every 10 iterations (50 seconds)
+                if self.iteration_count % 10 == 0:
+                    self.send_sunbox_status()
+                
+                # Sleep for 5 seconds between iterations
                 time.sleep(5)
                 
         except Exception as e:
-            crash_logger("sunbox_interface_main_loop", e)
+            crash_logger(f"{self.process_name}_main_loop", e)
             print(f"SunBoxInterface: Error in main loop: {e}")
             self.shutdown()
+    
+    def do_sunbox_work(self):
+        """SunBox-specific processing work."""
+        try:
+            # SunBox-specific logic here
+            current_time = time.time()
+            self.custom_data['last_run'] = current_time
+            self.custom_data['iteration'] = self.iteration_count
+            
+            # Example: Monitor system, process data, etc.
+            # Add your SunBox-specific functionality here
+            
+        except Exception as e:
+            crash_logger(f"{self.process_name}_sunbox_work", e)
+            print(f"SunBoxInterface: Error in SunBox work: {e}")
+    
+    def send_sunbox_status(self):
+        """Send SunBox status update to other processes."""
+        try:
+            status_msg = {
+                'process_name': self.process_name,
+                'iteration': self.iteration_count,
+                'status': 'running',
+                'data_items': len(self.custom_data),
+                'timestamp': time.time(),
+                'sunbox_specific': {
+                    'interface_version': '1.0',
+                    'active_connections': 0,  # Example data
+                    'processed_items': self.iteration_count
+                }
+            }
+            
+            self.send_message('SUNBOX_STATUS', status_msg)
+            print(f"SunBoxInterface: Sent status update: iteration {self.iteration_count}")
+            
+        except Exception as e:
+            crash_logger(f"{self.process_name}_status_update", e)
+            print(f"SunBoxInterface: Error sending status update: {e}")
 
 def main():
     try:
@@ -109,6 +162,7 @@ def main():
         print(f"Working Directory: {os.getcwd()}")
         print(f"Python Path: {sys.path[:3]}...")  # Show first 3 entries
         
+        # Create and start the SunBoxInterface
         sunbox_interface = SunBoxInterface()
         print("SunBoxInterface: Created successfully, starting...")
         sunbox_interface.start()
