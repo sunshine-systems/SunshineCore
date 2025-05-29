@@ -15,7 +15,6 @@ import json
 import time
 from subprocesses.base_subprocess import BaseSubProcess
 from utils.message_types import *
-from utils.process_manager import kill_process_on_port
 from utils.logger import crash_logger
 from config.settings import CONTROL_PANEL_PORT
 
@@ -32,10 +31,7 @@ class ControlPanel(BaseSubProcess):
     def start(self):
         """Override start to include Flask server."""
         try:
-            # Kill any existing process on the port
-            kill_process_on_port(CONTROL_PANEL_PORT)
-            
-            # Start Flask server
+            # Start Flask server WITHOUT killing port (auth server already shut down)
             self.start_flask_server()
             
             # Start base subprocess functionality
@@ -220,6 +216,8 @@ def main():
     except Exception as e:
         crash_logger("control_panel", e)
         print(f"ControlPanel: Fatal error: {e}")
+        import traceback
+        traceback.print_exc()
         print("Press Enter to close this window...")
         try:
             input()

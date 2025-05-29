@@ -10,5 +10,3 @@ pipenv run python main.py --devmode
 
 # Return to root directory
 cd ..
-
-echo "System startup complete. All processes are now running independently."

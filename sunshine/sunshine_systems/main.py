@@ -23,6 +23,7 @@ def main():
         
         print("="*50)
         print("SUNSHINE SYSTEM STARTUP")
+        print(f"Main Process PID: {os.getpid()}")
         print("="*50)
         
         # Phase 1: Authentication (BLOCKING)
@@ -55,21 +56,22 @@ def main():
             crash_logger("zeromq_broker_startup", e)
             return
         
-        # Phase 3: Start registered subprocesses - BULLETPROOF VERSION
+        # Phase 3: Start registered subprocesses
         print("\nPhase 3: Starting Subprocesses")
         print("-" * 30)
         
-        success_count = start_all_subprocesses(dev_mode)
+        launched_count = launch_all_subprocesses_debug(dev_mode)
         
-        print(f"\n✅ Started {success_count}/{len(SUBPROCESS_REGISTRY)} subprocesses")
+        print(f"\n🚀 Launched {launched_count}/{len(SUBPROCESS_REGISTRY)} subprocess commands")
         print("\n" + "="*50)
         print("SUNSHINE SYSTEM STARTUP COMPLETE")
         print("="*50)
-        print("\nAll systems are now running independently:")
+        print("\nAll subprocess launch commands have been issued:")
         print("- ZeroMQ Broker (ports 5555/5556)")
         print("- Control Panel (http://127.0.0.1:2828)")
         print(f"- {len(SUBPROCESS_REGISTRY)} subprocess(es)")
         print("\nMain process exiting in 3 seconds...")
+        print("Subprocesses will continue initializing independently.")
         
         # Brief pause then exit - all subprocesses continue running
         for i in range(3, 0, -1):
@@ -81,98 +83,85 @@ def main():
         crash_logger("main_application", e)
         print(f"\n❌ Critical error in main application: {e}")
         print("Crash dump written to desktop.")
-        sys.exit(1)
+        import traceback
+        traceback.print_exc()
+        # Don't use sys.exit, just return
+        return
 
-def start_all_subprocesses(dev_mode):
-    """BULLETPROOF subprocess startup - guarantees all processes are attempted."""
-    print(f"🚀 BULLETPROOF SUBPROCESS STARTUP")
-    print(f"📋 Registry contains {len(SUBPROCESS_REGISTRY)} processes")
+def launch_all_subprocesses_debug(dev_mode):
+    """DEBUG VERSION - Launch all subprocesses with extensive logging."""
+    print(f"🚀 DEBUG SUBPROCESS LAUNCHER")
+    print(f"📋 Registry contains {len(SUBPROCESS_REGISTRY)} processes:")
+    for i, config in enumerate(SUBPROCESS_REGISTRY):
+        print(f"   {i+1}. {config['name']} ({config['folder']})")
     
-    success_count = 0
+    launched_count = 0
     
-    # Process each subprocess individually with full isolation
+    # Launch ALL subprocesses
     for i, config in enumerate(SUBPROCESS_REGISTRY):
         process_num = i + 1
         
         print(f"\n{'='*60}")
-        print(f"🔄 STARTING PROCESS {process_num}/{len(SUBPROCESS_REGISTRY)}: {config['name']}")
+        print(f"🚀 LAUNCHING PROCESS {process_num}/{len(SUBPROCESS_REGISTRY)}: {config['name']}")
         print(f"{'='*60}")
         
         try:
-            print(f"📁 Folder: {config['folder']}")
-            print(f"🖥️  Console: {config.get('show_console', False)}")
-            print(f"⚠️  Critical: {config.get('critical', False)}")
+            cmd = [sys.executable, 'main.py', '--registry', config['name']]
+            print(f"📋 Command: {' '.join(cmd)}")
+            print(f"📁 Working Dir: {os.getcwd()}")
+            print(f"🖥️  Show Console: {config.get('show_console', True)}")
             
-            # Start the subprocess
-            print(f"🚀 Launching subprocess...")
-            launch_single_subprocess(config, dev_mode)
+            if dev_mode and config.get('show_console', True):
+                if os.name == 'nt':  # Windows
+                    print(f"🪟 Creating Windows console window...")
+                    # Store process reference to check if it started
+                    proc = subprocess.Popen(
+                        cmd,
+                        creationflags=subprocess.CREATE_NEW_CONSOLE,
+                        cwd=os.getcwd()
+                    )
+                    print(f"   ✅ {config['name']} launched with PID: {proc.pid}")
+                    
+                    # Brief check to see if process is still alive
+                    time.sleep(0.2)
+                    if proc.poll() is not None:
+                        print(f"   ⚠️  Process exited immediately with code: {proc.returncode}")
+                    else:
+                        print(f"   ✅ Process still running after 0.2s")
+                else:  # Linux/Mac
+                    proc = subprocess.Popen(cmd, cwd=os.getcwd())
+                    print(f"   ✅ {config['name']} launched")
+            else:
+                if os.name == 'nt':  # Windows
+                    proc = subprocess.Popen(
+                        cmd,
+                        cwd=os.getcwd(),
+                        creationflags=subprocess.CREATE_NO_WINDOW
+                    )
+                else:  # Linux/Mac
+                    proc = subprocess.Popen(cmd, cwd=os.getcwd())
+                print(f"   ✅ {config['name']} background launched")
             
-            print(f"✅ {config['name']} started successfully")
-            success_count += 1
+            launched_count += 1
+            print(f"✅ Successfully launched {config['name']}")
             
+            # Small delay between launches
             if process_num < len(SUBPROCESS_REGISTRY):
-                print(f"⏳ Waiting 2 seconds before next process...")
-                time.sleep(2)
+                print(f"⏳ Waiting 0.5s before next process...")
+                time.sleep(0.5)
                 
         except Exception as e:
-            print(f"❌ Failed to start {config['name']}: {e}")
-            crash_logger(f"subprocess_startup_{config['name']}", e)
-            print(f"🔄 Continuing with remaining processes...")
-        
-        print(f"✅ Completed process {process_num}/{len(SUBPROCESS_REGISTRY)}")
+            print(f"❌ Failed to launch {config['name']}: {e}")
+            import traceback
+            traceback.print_exc()
+            # Continue launching others
     
     print(f"\n{'='*60}")
-    print(f"🏁 SUBPROCESS STARTUP COMPLETE")  
-    print(f"✅ Success: {success_count}/{len(SUBPROCESS_REGISTRY)}")
+    print(f"🏁 All launch attempts completed!")
+    print(f"✅ Successfully launched: {launched_count}/{len(SUBPROCESS_REGISTRY)}")
     print(f"{'='*60}")
     
-    return success_count
-
-def launch_single_subprocess(config, dev_mode):
-    """Launch a single subprocess with full error handling."""
-    cmd = [sys.executable, 'main.py', '--registry', config['name']]
-    
-    print(f"💻 Command: {' '.join(cmd)}")
-    print(f"📂 Working Directory: {os.getcwd()}")
-    
-    if dev_mode and config.get('show_console', True):
-        if os.name == 'nt':  # Windows
-            print(f"🪟 Creating Windows console window...")
-            process = subprocess.Popen(
-                cmd,
-                creationflags=subprocess.CREATE_NEW_CONSOLE,
-                cwd=os.getcwd()
-            )
-            print(f"🆔 Started with PID: {process.pid}")
-        else:  # Linux/Mac
-            print(f"🐧 Creating Linux/Mac terminal...")
-            terminals = ['gnome-terminal', 'xterm', 'konsole', 'x-terminal-emulator']
-            
-            for terminal in terminals:
-                try:
-                    if terminal == 'gnome-terminal':
-                        process = subprocess.Popen([terminal, '--', *cmd], cwd=os.getcwd())
-                    else:
-                        process = subprocess.Popen([terminal, '-e'] + cmd, cwd=os.getcwd())
-                    print(f"🆔 Started with {terminal}, PID: {process.pid}")
-                    break
-                except FileNotFoundError:
-                    continue
-            else:
-                print(f"⚠️  No terminal emulator found, using background process")
-                process = subprocess.Popen(cmd, cwd=os.getcwd())
-                print(f"🆔 Started in background, PID: {process.pid}")
-    else:
-        print(f"🔇 Creating background process...")
-        if os.name == 'nt':  # Windows
-            process = subprocess.Popen(
-                cmd,
-                cwd=os.getcwd(),
-                creationflags=subprocess.CREATE_NO_WINDOW
-            )
-        else:  # Linux/Mac
-            process = subprocess.Popen(cmd, cwd=os.getcwd())
-        print(f"🆔 Started in background, PID: {process.pid}")
+    return launched_count
 
 def run_subprocess(registry_name):
     """Run a specific subprocess by executing its main.py file directly."""
@@ -220,6 +209,8 @@ def run_subprocess(registry_name):
     except Exception as e:
         crash_logger(f"subprocess_{registry_name}", e)
         print(f"❌ Fatal error in {registry_name}: {e}")
+        import traceback
+        traceback.print_exc()
         print("Press Enter to close this window...")
         try:
             input()
@@ -238,6 +229,7 @@ def start_zeromq_broker_subprocess(dev_mode):
     
     if dev_mode:
         if os.name == 'nt':  # Windows
+            # Use CREATE_NEW_CONSOLE only for visible console
             subprocess.Popen(
                 cmd,
                 creationflags=subprocess.CREATE_NEW_CONSOLE,
@@ -258,6 +250,7 @@ def start_zeromq_broker_subprocess(dev_mode):
                 subprocess.Popen(cmd, cwd=os.getcwd())
     else:
         if os.name == 'nt':  # Windows
+            # Use CREATE_NO_WINDOW for background process
             subprocess.Popen(
                 cmd,
                 cwd=os.getcwd(),
