@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunshine Authentication</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .auth-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            min-width: 300px;
+        }
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        .auth-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .auth-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+        .auth-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status {
+            margin-top: 1rem;
+            padding: 0.5rem;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .countdown {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="logo">Sunshine System</div>
+        <p>Click to authenticate and start the system</p>
+        <button class="auth-button" onclick="authenticate()">Authenticate</button>
+        <div id="status" class="status"></div>
+        <div id="countdown" class="countdown"></div>
+    </div>
+
+    <script>
+        async function authenticate() {
+            const button = document.querySelector('.auth-button');
+            const status = document.getElementById('status');
+            const countdown = document.getElementById('countdown');
+            
+            button.disabled = true;
+            button.textContent = 'Authenticating...';
+            status.style.display = 'none';
+            countdown.style.display = 'none';
+            
+            try {
+                const response = await fetch('/auth', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    status.textContent = 'Authentication successful! Starting system...';
+                    status.className = 'status success';
+                    status.style.display = 'block';
+                    
+                    // Show countdown
+                    countdown.style.display = 'block';
+                    let timeLeft = 3;
+                    countdown.textContent = `Closing window in ${timeLeft} seconds...`;
+                    
+                    const countdownInterval = setInterval(() => {
+                        timeLeft--;
+                        if (timeLeft > 0) {
+                            countdown.textContent = `Closing window in ${timeLeft} seconds...`;
+                        } else {
+                            countdown.textContent = 'Closing window...';
+                            clearInterval(countdownInterval);
+                        }
+                    }, 1000);
+                    
+                    // Send shutdown request then close window
+                    setTimeout(async () => {
+                        try {
+                            await fetch('/shutdown', { 
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                }
+                            });
+                        } catch (e) {
+                            // Server shutdown expected, ignore connection errors
+                            console.log('Server shutdown initiated');
+                        }
+                        
+                        // Close the browser tab/window
+                        setTimeout(() => {
+                            // Try multiple methods to close the window
+                            try {
+                                window.close();
+                            } catch (e) {
+                                // If window.close() doesn't work, try to navigate away
+                                window.location = 'about:blank';
+                            }
+                        }, 500);
+                    }, 3000);
+                } else {
+                    throw new Error(result.message || 'Authentication failed');
+                }
+            } catch (error) {
+                console.error('Authentication error:', error);
+                status.textContent = 'Authentication failed. Please try again.';
+                status.className = 'status error';
+                status.style.display = 'block';
+                button.disabled = false;
+                button.textContent = 'Authenticate';
+                countdown.style.display = 'none';
+            }
+        }
+        
+        // Auto-focus the button when page loads
+        window.addEventListener('load', () => {
+            document.querySelector('.auth-button').focus();
+        });
+        
+        // Allow Enter key to authenticate
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !document.querySelector('.auth-button').disabled) {
+                authenticate();
+            }
+        });
+    </script>
+</body>
+</html>

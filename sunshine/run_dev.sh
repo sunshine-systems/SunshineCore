@@ -1,0 +1,14 @@
+#!/bin/bash
+echo "Starting Sunshine System in Development Mode"
+echo "=========================================="
+
+# Change to the sunshine_systems directory
+cd sunshine_systems
+
+# Activate pipenv environment and run with dev flag
+pipenv run python main.py --devmode
+
+# Return to root directory
+cd ..
+
+echo "System startup complete. All processes are now running independently."
