@@ -1,577 +1,189 @@
 #!/bin/bash
 
 echo "=========================================="
-echo "Simplify Message Details to Raw JSON"
+echo "Add Shutdown Support to ZeroMQ Broker"
 echo "=========================================="
 
 cd sunshine/sunshine_systems
 
-echo "Updating UI to show raw message data..."
+echo "Updating ZeroMQ broker to handle shutdown commands..."
 
-# Update just the selectMessage function in the HTML
-cat > templates/control_panel/index.html << 'EOF'
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sunshine Control Panel</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        :root {
-            --bg: #0a0a0a;
-            --panel-bg: #111111;
-            --border: rgba(255, 255, 255, 0.08);
-            --text: #ffffff;
-            --text-dim: #666666;
-            --accent: #667eea;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --info: #3b82f6;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            height: 100vh;
-            overflow: hidden;
-            font-size: 14px;
-        }
-        
-        .container {
-            display: flex;
-            height: 100vh;
-        }
-        
-        /* Left Panel - System Overview */
-        .left-panel {
-            width: 280px;
-            background: var(--panel-bg);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            padding: 1.5rem;
-            gap: 1.5rem;
-        }
-        
-        .logo {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--accent);
-            margin-bottom: 0.5rem;
-        }
-        
-        .connection-status {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            color: var(--text-dim);
-        }
-        
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--danger);
-        }
-        
-        .status-dot.connected {
-            background: var(--success);
-        }
-        
-        .stats {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        
-        .stat {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 6px;
-        }
-        
-        .stat-label {
-            color: var(--text-dim);
-            font-size: 0.875rem;
-        }
-        
-        .stat-value {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--accent);
-        }
-        
-        .processes {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            overflow-y: auto;
-        }
-        
-        .process {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.75rem;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .process:hover {
-            background: rgba(102, 126, 234, 0.1);
-        }
-        
-        .process-name {
-            font-weight: 500;
-        }
-        
-        .process-status {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--success);
-        }
-        
-        .shutdown-section {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        
-        .shutdown-input {
-            padding: 0.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            color: var(--text);
-            font-size: 0.875rem;
-        }
-        
-        .shutdown-btn {
-            padding: 0.5rem;
-            background: var(--danger);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        
-        .shutdown-btn:hover {
-            opacity: 0.8;
-        }
-        
-        /* Middle Panel - Messages */
-        .middle-panel {
-            flex: 1;
-            background: var(--bg);
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .message-filters {
-            display: flex;
-            gap: 0.5rem;
-            padding: 1rem;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .filter {
-            padding: 0.25rem 0.75rem;
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            color: var(--text-dim);
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .filter:hover {
-            color: var(--text);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-        
-        .filter.active {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
-        }
-        
-        .messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0.5rem;
-        }
-        
-        .message {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.75rem;
-            margin-bottom: 0.25rem;
-            background: var(--panel-bg);
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.875rem;
-        }
-        
-        .message:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        
-        .message.selected {
-            background: rgba(102, 126, 234, 0.15);
-            border-left: 2px solid var(--accent);
-        }
-        
-        .message-type {
-            padding: 0.125rem 0.5rem;
-            border-radius: 3px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            min-width: 60px;
-            text-align: center;
-        }
-        
-        .type-PING, .type-PONG {
-            background: rgba(59, 130, 246, 0.15);
-            color: var(--info);
-        }
-        
-        .type-REGISTER, .type-REGISTER_ACK {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--success);
-        }
-        
-        .type-LOG {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-dim);
-        }
-        
-        .type-SHUTDOWN {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--danger);
-        }
-        
-        .message-sender {
-            flex: 1;
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .message-preview {
-            flex: 2;
-            color: var(--text-dim);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-size: 0.8rem;
-        }
-        
-        .message-time {
-            color: var(--text-dim);
-            font-size: 0.75rem;
-        }
-        
-        /* Right Panel - Message Details */
-        .right-panel {
-            width: 400px;
-            background: var(--panel-bg);
-            border-left: 1px solid var(--border);
-            padding: 1rem;
-            overflow-y: auto;
-        }
-        
-        .raw-json {
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.875rem;
-            color: var(--text);
-            white-space: pre-wrap;
-            word-break: break-all;
-            line-height: 1.5;
-        }
-        
-        .empty-state {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: var(--text-dim);
-            font-size: 0.875rem;
-        }
-        
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- Left Panel - System Overview -->
-        <div class="left-panel">
-            <div>
-                <div class="logo">🌟 Sunshine Control Panel</div>
-                <div class="connection-status">
-                    <div id="status-dot" class="status-dot"></div>
-                    <span id="status-text">Disconnected</span>
-                </div>
-            </div>
-            
-            <div class="stats">
-                <div class="stat">
-                    <span class="stat-label">Active Processes</span>
-                    <span class="stat-value" id="process-count">0</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Messages/Min</span>
-                    <span class="stat-value" id="message-rate">0</span>
-                </div>
-            </div>
-            
-            <div class="processes" id="processes-list">
-                <!-- Processes will be added here -->
-            </div>
-            
-            <div class="shutdown-section">
-                <input type="text" id="shutdown-target" class="shutdown-input" placeholder="Process name or * for all">
-                <button class="shutdown-btn" onclick="shutdownProcess()">Shutdown Process</button>
-            </div>
-        </div>
-        
-        <!-- Middle Panel - Messages -->
-        <div class="middle-panel">
-            <div class="message-filters">
-                <button class="filter active" data-filter="all">All</button>
-                <button class="filter" data-filter="PING,PONG">Heartbeat</button>
-                <button class="filter" data-filter="REGISTER,REGISTER_ACK">Registration</button>
-                <button class="filter" data-filter="LOG">Logs</button>
-                <button class="filter" data-filter="other">Other</button>
-            </div>
-            <div class="messages" id="messages-list">
-                <!-- Messages will be added here -->
-            </div>
-        </div>
-        
-        <!-- Right Panel - Message Details -->
-        <div class="right-panel" id="detail-content">
-            <div class="empty-state">
-                Select a message to view details
-            </div>
-        </div>
-    </div>
+# Update the broker to listen for shutdown messages
+cat > zeromq/broker.py << 'EOF'
+import zmq
+import sys
+import os
+import time
+import threading
+import json
 
-    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
-    <script>
-        let socket = null;
-        let processes = [];
-        let messages = [];
-        let selectedMessage = null;
-        let activeFilter = 'all';
-        let messageCount = 0;
-        let messageCountStart = Date.now();
+# Add parent directory to path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+from config.settings import ZEROMQ_PORT
+from utils.logger import crash_logger
+from utils.message_types import MSG_SHUTDOWN
+
+class MessageBroker:
+    def __init__(self):
+        self.context = zmq.Context()
+        self.frontend = None
+        self.backend = None
+        self.monitor = None
+        self.running = True
+        self.broker_name = "ZeroMQBroker"
         
-        // Initialize Socket.IO
-        function initializeSocket() {
-            socket = io();
-            
-            socket.on('connect', () => {
-                document.getElementById('status-dot').classList.add('connected');
-                document.getElementById('status-text').textContent = 'Connected';
-            });
-            
-            socket.on('disconnect', () => {
-                document.getElementById('status-dot').classList.remove('connected');
-                document.getElementById('status-text').textContent = 'Disconnected';
-            });
-            
-            socket.on('processes_update', (data) => {
-                processes = data;
-                updateProcesses();
-            });
-            
-            socket.on('message_received', (message) => {
-                messages.unshift(message);
-                messageCount++;
-                if (messages.length > 1000) {
-                    messages = messages.slice(0, 1000);
-                }
-                updateMessages();
-                updateMessageRate();
-            });
-            
-            socket.on('messages_update', (data) => {
-                messages = data.reverse();
-                updateMessages();
-            });
-        }
+    def setup_sockets(self):
+        """Setup all ZeroMQ sockets."""
+        # Frontend socket for publishers (subprocesses send messages here)
+        self.frontend = self.context.socket(zmq.SUB)
+        self.frontend.bind(f"tcp://*:{ZEROMQ_PORT}")
+        self.frontend.setsockopt(zmq.SUBSCRIBE, b"")
         
-        // Update processes
-        function updateProcesses() {
-            const container = document.getElementById('processes-list');
-            const activeCount = processes.filter(p => p.status === 'active').length;
-            
-            document.getElementById('process-count').textContent = activeCount;
-            
-            container.innerHTML = processes.map(process => `
-                <div class="process">
-                    <span class="process-name">${process.name}</span>
-                    <div class="process-status ${process.status !== 'active' ? 'dead' : ''}"></div>
-                </div>
-            `).join('');
-        }
+        # Backend socket for subscribers (subprocesses receive messages here)
+        self.backend = self.context.socket(zmq.PUB)
+        self.backend.bind(f"tcp://*:{ZEROMQ_PORT + 1}")
         
-        // Update messages
-        function updateMessages() {
-            const container = document.getElementById('messages-list');
-            
-            let filtered = messages;
-            if (activeFilter !== 'all') {
-                if (activeFilter === 'other') {
-                    const exclude = ['PING', 'PONG', 'REGISTER', 'REGISTER_ACK', 'LOG'];
-                    filtered = messages.filter(m => !exclude.includes(m.message_type));
-                } else {
-                    const types = activeFilter.split(',');
-                    filtered = messages.filter(m => types.includes(m.message_type));
-                }
-            }
-            
-            container.innerHTML = filtered.slice(0, 200).map((msg, idx) => {
-                const time = new Date(msg.datetime).toLocaleTimeString();
-                let preview = '';
+        # Monitor socket to receive messages for shutdown detection
+        self.monitor = self.context.socket(zmq.SUB)
+        self.monitor.connect(f"tcp://localhost:{ZEROMQ_PORT + 1}")
+        self.monitor.setsockopt(zmq.SUBSCRIBE, b"")
+        self.monitor.setsockopt(zmq.RCVTIMEO, 100)  # 100ms timeout
+        
+        print(f"✅ ZeroMQ Broker ready on ports {ZEROMQ_PORT}/{ZEROMQ_PORT + 1}")
+        
+    def monitor_for_shutdown(self):
+        """Monitor messages for shutdown commands."""
+        print(f"{self.broker_name}: Monitoring for shutdown commands...")
+        
+        while self.running:
+            try:
+                # Try to receive a message
+                raw_message = self.monitor.recv(zmq.NOBLOCK)
+                message = json.loads(raw_message.decode('utf-8'))
                 
-                if (msg.payload) {
-                    if (msg.message_type === 'LOG') {
-                        preview = msg.payload.message || '';
-                    } else if (msg.message_type === 'PING') {
-                        preview = `Ping #${msg.payload.ping_number || ''}`;
-                    } else if (msg.payload.process_name) {
-                        preview = `Process: ${msg.payload.process_name}`;
-                    } else {
-                        preview = Object.keys(msg.payload).join(', ');
-                    }
-                }
+                # Check if it's a shutdown message
+                if message.get('message_type') == MSG_SHUTDOWN:
+                    target = message.get('payload', {}).get('target')
+                    sender = message.get('sender')
+                    
+                    if target == '*':
+                        print(f"\n{self.broker_name}: 🛑 Received shutdown command for ALL from {sender}")
+                        print(f"{self.broker_name}: 🛑 Initiating broker shutdown...")
+                        self.running = False
+                        break
+                        
+            except zmq.Again:
+                # No message available, continue
+                pass
+            except Exception as e:
+                if self.running:  # Only log if we're not shutting down
+                    print(f"{self.broker_name}: Error monitoring messages: {e}")
+            
+            time.sleep(0.1)  # Small delay to prevent CPU spinning
+    
+    def relay_messages(self):
+        """Main message relay loop."""
+        print(f"{self.broker_name}: Message relay active. Press Ctrl+C to stop.")
+        
+        # Use a poller instead of proxy for more control
+        poller = zmq.Poller()
+        poller.register(self.frontend, zmq.POLLIN)
+        
+        while self.running:
+            try:
+                # Poll with timeout so we can check running flag
+                socks = dict(poller.poll(100))  # 100ms timeout
                 
-                return `
-                    <div class="message ${selectedMessage === msg ? 'selected' : ''}" 
-                         onclick="selectMessage(${filtered.indexOf(msg)})">
-                        <span class="message-type type-${msg.message_type}">${msg.message_type}</span>
-                        <span class="message-sender">${msg.sender}</span>
-                        <span class="message-preview">${preview}</span>
-                        <span class="message-time">${time}</span>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        // Select message - SIMPLIFIED TO SHOW RAW JSON
-        function selectMessage(index) {
-            let filtered = messages;
-            if (activeFilter !== 'all') {
-                if (activeFilter === 'other') {
-                    const exclude = ['PING', 'PONG', 'REGISTER', 'REGISTER_ACK', 'LOG'];
-                    filtered = messages.filter(m => !exclude.includes(m.message_type));
-                } else {
-                    const types = activeFilter.split(',');
-                    filtered = messages.filter(m => types.includes(m.message_type));
-                }
-            }
+                if self.frontend in socks:
+                    # Receive message from frontend
+                    message = self.frontend.recv()
+                    
+                    # Relay to backend
+                    self.backend.send(message)
+                    
+            except KeyboardInterrupt:
+                print(f"\n{self.broker_name}: Received interrupt signal...")
+                self.running = False
+            except Exception as e:
+                if self.running:
+                    print(f"{self.broker_name}: Relay error: {e}")
+    
+    def start(self):
+        """Start the broker with monitoring."""
+        try:
+            print("ZeroMQ Broker starting...")
             
-            selectedMessage = filtered[index];
-            updateMessages();
+            # Setup sockets
+            self.setup_sockets()
             
-            const detail = document.getElementById('detail-content');
-            if (selectedMessage) {
-                // Just show the raw JSON data
-                detail.innerHTML = `<pre class="raw-json">${JSON.stringify(selectedMessage, null, 2)}</pre>`;
-            }
-        }
-        
-        // Update message rate
-        function updateMessageRate() {
-            const elapsed = (Date.now() - messageCountStart) / 1000 / 60;
-            const rate = Math.round(messageCount / elapsed);
-            document.getElementById('message-rate').textContent = rate;
-        }
-        
-        // Filter handling
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('filter')) {
-                document.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
-                e.target.classList.add('active');
-                activeFilter = e.target.dataset.filter;
-                updateMessages();
-            }
-        });
-        
-        // Shutdown process
-        function shutdownProcess() {
-            const target = document.getElementById('shutdown-target').value.trim();
-            if (!target) {
-                alert('Please enter a process name or * for all');
-                return;
-            }
+            # Give sockets time to bind
+            time.sleep(0.5)
             
-            if (confirm(`Shutdown "${target}"?`)) {
-                socket.emit('send_shutdown', { target });
-                document.getElementById('shutdown-target').value = '';
-            }
-        }
+            # Start monitor thread
+            monitor_thread = threading.Thread(target=self.monitor_for_shutdown, daemon=True)
+            monitor_thread.start()
+            
+            # Run message relay in main thread
+            self.relay_messages()
+            
+        except Exception as e:
+            crash_logger("zeromq_broker", e)
+            print(f"Broker error: {e}")
+        finally:
+            self.shutdown()
+    
+    def shutdown(self):
+        """Clean shutdown of the broker."""
+        print(f"\n{self.broker_name}: Shutting down...")
+        self.running = False
         
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeSocket();
-            setInterval(updateMessageRate, 5000);
-        });
-    </script>
-</body>
-</html>
+        # Give threads time to finish
+        time.sleep(0.5)
+        
+        # Close all sockets
+        if self.frontend:
+            self.frontend.close()
+        if self.backend:
+            self.backend.close()
+        if self.monitor:
+            self.monitor.close()
+        
+        # Terminate context
+        if self.context:
+            self.context.term()
+        
+        print(f"{self.broker_name}: Shutdown complete ✅")
+
+def main():
+    """Main entry point."""
+    try:
+        broker = MessageBroker()
+        broker.start()
+    except Exception as e:
+        crash_logger("zeromq_broker_startup", e)
+        print(f"Failed to start ZeroMQ Broker: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
 EOF
 
 echo ""
 echo "=========================================="
-echo "Raw JSON Message Details Applied!"
+echo "Broker Shutdown Support Added!"
 echo "=========================================="
 echo ""
 echo "Changes made:"
-echo "✅ Right panel now shows raw JSON data"
-echo "✅ No formatting - just the complete message object"
-echo "✅ Easier to see all message properties at once"
-echo "✅ Clean monospace font for JSON display"
+echo "✅ Broker now monitors for SHUTDOWN messages"
+echo "✅ Responds to 'shutdown *' command"
+echo "✅ Gracefully shuts down when all processes are told to shutdown"
+echo "✅ Still functions as a message relay"
+echo "✅ Clean shutdown with socket cleanup"
 echo ""
-echo "Refresh http://127.0.0.1:2828 to see the simplified view!"
+echo "Now when you send 'shutdown *' from the Control Panel:"
+echo "1. All subprocesses will shutdown"
+echo "2. The ZeroMQ broker will shutdown"
+echo "3. True full system shutdown!"
+echo ""
+echo "Restart the system to test the new shutdown behavior!"
