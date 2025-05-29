@@ -11,518 +11,540 @@
             box-sizing: border-box;
         }
         
+        :root {
+            --bg: #0a0a0a;
+            --panel-bg: #111111;
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #ffffff;
+            --text-dim: #666666;
+            --accent: #667eea;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+        }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #1a1a1a;
-            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             height: 100vh;
             overflow: hidden;
+            font-size: 14px;
         }
         
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 1rem;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        .container {
+            display: flex;
+            height: 100vh;
         }
         
-        .header h1 {
-            font-size: 1.8rem;
-            font-weight: 300;
+        /* Left Panel - System Overview */
+        .left-panel {
+            width: 280px;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            gap: 1.5rem;
+        }
+        
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
         }
         
         .connection-status {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-        
-        .connected {
-            background: #28a745;
-            color: white;
-        }
-        
-        .disconnected {
-            background: #dc3545;
-            color: white;
-        }
-        
-        .loading {
-            background: #ffc107;
-            color: #212529;
-        }
-        
-        .main-container {
             display: flex;
-            height: calc(100vh - 80px);
-        }
-        
-        .sidebar {
-            width: 300px;
-            background: #2d2d2d;
-            border-right: 1px solid #444;
-            overflow-y: auto;
-        }
-        
-        .content {
-            flex: 1;
-            background: #1e1e1e;
-            overflow-y: auto;
-        }
-        
-        .section {
-            margin: 1rem;
-            background: #333;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        
-        .section-header {
-            background: #404040;
-            padding: 0.8rem 1rem;
-            font-weight: 600;
-            border-bottom: 1px solid #555;
-        }
-        
-        .section-content {
-            padding: 1rem;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        
-        .process-item {
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 0.5rem;
-            margin: 0.3rem 0;
-            background: #444;
-            border-radius: 4px;
-            border-left: 4px solid #28a745;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-dim);
         }
         
-        .process-item.dead {
-            border-left-color: #dc3545;
-            opacity: 0.7;
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--danger);
         }
         
-        .process-name {
-            font-weight: 600;
-        }
-        
-        .process-pid {
-            font-size: 0.9rem;
-            color: #aaa;
-        }
-        
-        .process-status {
-            padding: 0.2rem 0.5rem;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-        
-        .status-active {
-            background: #28a745;
-            color: white;
-        }
-        
-        .status-dead {
-            background: #dc3545;
-            color: white;
-        }
-        
-        .message-item {
-            padding: 0.5rem;
-            margin: 0.3rem 0;
-            background: #2a2a2a;
-            border-radius: 4px;
-            border-left: 3px solid #667eea;
-            font-size: 0.9rem;
-        }
-        
-        .message-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.3rem;
-            font-size: 0.8rem;
-            color: #aaa;
-        }
-        
-        .message-type {
-            color: #667eea;
-            font-weight: 600;
-        }
-        
-        .message-content {
-            color: #ddd;
-        }
-        
-        .controls {
-            padding: 1rem;
-            background: #333;
-            border-top: 1px solid #444;
-        }
-        
-        .control-group {
-            margin-bottom: 1rem;
-        }
-        
-        .control-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #ccc;
-        }
-        
-        .control-input {
-            width: 100%;
-            padding: 0.5rem;
-            background: #2a2a2a;
-            border: 1px solid #555;
-            border-radius: 4px;
-            color: #fff;
-        }
-        
-        .control-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 0.7rem 1.5rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: transform 0.2s;
-        }
-        
-        .control-button:hover {
-            transform: translateY(-1px);
-        }
-        
-        .danger-button {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        .status-dot.connected {
+            background: var(--success);
         }
         
         .stats {
             display: flex;
-            justify-content: space-around;
-            padding: 1rem;
-            background: #333;
-            margin: 1rem;
-            border-radius: 8px;
+            flex-direction: column;
+            gap: 1rem;
         }
         
-        .stat-item {
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #667eea;
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 6px;
         }
         
         .stat-label {
-            font-size: 0.9rem;
-            color: #aaa;
+            color: var(--text-dim);
+            font-size: 0.875rem;
         }
         
-        .debug-info {
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 0.8rem;
-            color: #ccc;
-            max-width: 300px;
-            max-height: 150px;
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+        
+        .processes {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
             overflow-y: auto;
         }
         
-        .error-message {
-            background: #dc3545;
+        .process {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .process:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .process-name {
+            font-weight: 500;
+        }
+        
+        .process-status {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+        
+        .shutdown-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .shutdown-input {
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            font-size: 0.875rem;
+        }
+        
+        .shutdown-btn {
+            padding: 0.5rem;
+            background: var(--danger);
             color: white;
-            padding: 10px;
-            margin: 10px;
-            border-radius: 5px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .shutdown-btn:hover {
+            opacity: 0.8;
+        }
+        
+        /* Middle Panel - Messages */
+        .middle-panel {
+            flex: 1;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .message-filters {
+            display: flex;
+            gap: 0.5rem;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .filter {
+            padding: 0.25rem 0.75rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter:hover {
+            color: var(--text);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .filter.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+        
+        .message {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            margin-bottom: 0.25rem;
+            background: var(--panel-bg);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+        
+        .message:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .message.selected {
+            background: rgba(102, 126, 234, 0.15);
+            border-left: 2px solid var(--accent);
+        }
+        
+        .message-type {
+            padding: 0.125rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            min-width: 60px;
             text-align: center;
+        }
+        
+        .type-PING, .type-PONG {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--info);
+        }
+        
+        .type-REGISTER, .type-REGISTER_ACK {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+        
+        .type-LOG {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-dim);
+        }
+        
+        .type-SHUTDOWN {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+        
+        .message-sender {
+            flex: 1;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .message-preview {
+            flex: 2;
+            color: var(--text-dim);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.8rem;
+        }
+        
+        .message-time {
+            color: var(--text-dim);
+            font-size: 0.75rem;
+        }
+        
+        /* Right Panel - Message Details */
+        .right-panel {
+            width: 400px;
+            background: var(--panel-bg);
+            border-left: 1px solid var(--border);
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        
+        .raw-json {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+            color: var(--text);
+            white-space: pre-wrap;
+            word-break: break-all;
+            line-height: 1.5;
+        }
+        
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-dim);
+            font-size: 0.875rem;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Sunshine Control Panel</h1>
-        <div id="connection-status" class="connection-status loading">Loading...</div>
-    </div>
-    
-    <div class="main-container">
-        <div class="sidebar">
-            <div class="section">
-                <div class="section-header">System Statistics</div>
-                <div class="stats">
-                    <div class="stat-item">
-                        <div class="stat-value" id="process-count">0</div>
-                        <div class="stat-label">Processes</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="message-count">0</div>
-                        <div class="stat-label">Messages</div>
-                    </div>
+    <div class="container">
+        <!-- Left Panel - System Overview -->
+        <div class="left-panel">
+            <div>
+                <div class="logo">🌟 Sunshine Control Panel</div>
+                <div class="connection-status">
+                    <div id="status-dot" class="status-dot"></div>
+                    <span id="status-text">Disconnected</span>
                 </div>
             </div>
             
-            <div class="section">
-                <div class="section-header">Active Processes</div>
-                <div class="section-content" id="processes-list">
-                    <div style="text-align: center; color: #666; padding: 2rem;">
-                        Loading processes...
-                    </div>
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-label">Active Processes</span>
+                    <span class="stat-value" id="process-count">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Messages/Min</span>
+                    <span class="stat-value" id="message-rate">0</span>
                 </div>
             </div>
             
-            <div class="controls">
-                <div class="control-group">
-                    <label for="shutdown-target">Shutdown Target:</label>
-                    <input type="text" id="shutdown-target" class="control-input" placeholder="Process name or * for all">
-                </div>
-                <button class="control-button danger-button" onclick="shutdownProcess()">Shutdown Process</button>
+            <div class="processes" id="processes-list">
+                <!-- Processes will be added here -->
+            </div>
+            
+            <div class="shutdown-section">
+                <input type="text" id="shutdown-target" class="shutdown-input" placeholder="Process name or * for all">
+                <button class="shutdown-btn" onclick="shutdownProcess()">Shutdown Process</button>
             </div>
         </div>
         
-        <div class="content">
-            <div class="section">
-                <div class="section-header">System Messages</div>
-                <div class="section-content" id="messages-list" style="max-height: calc(100vh - 200px);">
-                    <div style="text-align: center; color: #666; padding: 2rem;">
-                        Loading messages...
-                    </div>
-                </div>
+        <!-- Middle Panel - Messages -->
+        <div class="middle-panel">
+            <div class="message-filters">
+                <button class="filter active" data-filter="all">All</button>
+                <button class="filter" data-filter="PING,PONG">Heartbeat</button>
+                <button class="filter" data-filter="REGISTER,REGISTER_ACK">Registration</button>
+                <button class="filter" data-filter="LOG">Logs</button>
+                <button class="filter" data-filter="other">Other</button>
+            </div>
+            <div class="messages" id="messages-list">
+                <!-- Messages will be added here -->
             </div>
         </div>
-    </div>
-    
-    <div id="debug-info" class="debug-info">
-        <div>Initializing Control Panel...</div>
+        
+        <!-- Right Panel - Message Details -->
+        <div class="right-panel" id="detail-content">
+            <div class="empty-state">
+                Select a message to view details
+            </div>
+        </div>
     </div>
 
-    <!-- Multiple CDN fallbacks for SocketIO -->
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     <script>
-        // Try to load Socket.IO from multiple CDNs with fallbacks
-        function loadSocketIO() {
-            const scripts = [
-                'https://cdn.socket.io/4.7.4/socket.io.min.js',
-                'https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.js',
-                'https://unpkg.com/socket.io-client@4.7.4/dist/socket.io.js'
-            ];
-            
-            let currentIndex = 0;
-            
-            function tryLoadScript() {
-                if (currentIndex >= scripts.length) {
-                    debugLog('❌ Failed to load Socket.IO from all CDNs');
-                    showError('Failed to load Socket.IO library. Please check your internet connection.');
-                    return;
-                }
-                
-                const script = document.createElement('script');
-                script.src = scripts[currentIndex];
-                script.onload = function() {
-                    debugLog(`✅ Socket.IO loaded from: ${scripts[currentIndex]}`);
-                    initializeSocketIO();
-                };
-                script.onerror = function() {
-                    debugLog(`❌ Failed to load from: ${scripts[currentIndex]}`);
-                    currentIndex++;
-                    tryLoadScript();
-                };
-                document.head.appendChild(script);
-            }
-            
-            tryLoadScript();
-        }
+        let socket = null;
+        let processes = [];
+        let messages = [];
+        let selectedMessage = null;
+        let activeFilter = 'all';
+        let messageCount = 0;
+        let messageCountStart = Date.now();
         
-        // Initialize Socket.IO connection
-        function initializeSocketIO() {
-            if (typeof io === 'undefined') {
-                debugLog('❌ Socket.IO not available after loading');
-                showError('Socket.IO library loaded but not available');
-                return;
-            }
+        // Initialize Socket.IO
+        function initializeSocket() {
+            socket = io();
             
-            debugLog('🔄 Initializing Socket.IO connection...');
-            
-            const socket = io({
-                transports: ['websocket', 'polling'],
-                upgrade: true,
-                timeout: 5000
+            socket.on('connect', () => {
+                document.getElementById('status-dot').classList.add('connected');
+                document.getElementById('status-text').textContent = 'Connected';
             });
             
-            setupSocketEvents(socket);
-        }
-        
-        // Setup all socket event handlers
-        function setupSocketEvents(socket) {
-            let processes = [];
-            let messages = [];
-            
-            // Connection events
-            socket.on('connect', function() {
-                debugLog('✅ Connected to Control Panel SocketIO');
-                updateConnectionStatus(true);
+            socket.on('disconnect', () => {
+                document.getElementById('status-dot').classList.remove('connected');
+                document.getElementById('status-text').textContent = 'Disconnected';
             });
             
-            socket.on('disconnect', function() {
-                debugLog('❌ Disconnected from Control Panel SocketIO');
-                updateConnectionStatus(false);
-            });
-            
-            socket.on('connect_error', function(error) {
-                debugLog(`❌ Connection error: ${error.message}`);
-                updateConnectionStatus(false);
-            });
-            
-            // Data events
-            socket.on('processes_update', function(data) {
-                debugLog(`📊 Received processes_update with ${data.length} processes`);
+            socket.on('processes_update', (data) => {
                 processes = data;
-                updateProcessesList(processes);
-                updateStats(processes.length, messages.length);
+                updateProcesses();
             });
             
-            socket.on('message_received', function(message) {
-                debugLog(`📨 Received message: ${message.message_type} from ${message.sender}`);
+            socket.on('message_received', (message) => {
                 messages.unshift(message);
-                if (messages.length > 100) {
-                    messages = messages.slice(0, 100);
+                messageCount++;
+                if (messages.length > 1000) {
+                    messages = messages.slice(0, 1000);
                 }
-                updateMessagesList(messages);
-                updateStats(processes.length, messages.length);
+                updateMessages();
+                updateMessageRate();
             });
             
-            socket.on('messages_update', function(data) {
-                debugLog(`📨 Received messages_update with ${data.length} messages`);
+            socket.on('messages_update', (data) => {
                 messages = data.reverse();
-                updateMessagesList(messages);
-                updateStats(processes.length, messages.length);
+                updateMessages();
             });
-            
-            // Store socket reference globally for other functions
-            window.controlPanelSocket = socket;
         }
         
-        // Debug logging
-        function debugLog(message) {
-            const timestamp = new Date().toLocaleTimeString();
-            const logMessage = `[${timestamp}] ${message}`;
-            console.log(logMessage);
-            
-            const debugDiv = document.getElementById('debug-info');
-            debugDiv.innerHTML = logMessage + '<br>' + debugDiv.innerHTML;
-            
-            // Keep only last 15 debug messages
-            const lines = debugDiv.innerHTML.split('<br>');
-            if (lines.length > 15) {
-                debugDiv.innerHTML = lines.slice(0, 15).join('<br>');
-            }
-        }
-        
-        // Show error message
-        function showError(message) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.textContent = message;
-            document.body.insertBefore(errorDiv, document.body.firstChild);
-            updateConnectionStatus(false);
-        }
-        
-        // Connection status
-        function updateConnectionStatus(connected) {
-            const statusDiv = document.getElementById('connection-status');
-            if (connected) {
-                statusDiv.textContent = 'Connected';
-                statusDiv.className = 'connection-status connected';
-            } else {
-                statusDiv.textContent = 'Disconnected';  
-                statusDiv.className = 'connection-status disconnected';
-            }
-        }
-        
-        // UI Update functions
-        function updateProcessesList(processes) {
+        // Update processes
+        function updateProcesses() {
             const container = document.getElementById('processes-list');
+            const activeCount = processes.filter(p => p.status === 'active').length;
             
-            if (processes.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No processes registered</div>';
-                return;
-            }
+            document.getElementById('process-count').textContent = activeCount;
             
             container.innerHTML = processes.map(process => `
-                <div class="process-item ${process.status === 'dead' ? 'dead' : ''}">
-                    <div>
-                        <div class="process-name">${process.name}</div>
-                        <div class="process-pid">PID: ${process.pid}</div>
-                    </div>
-                    <div class="process-status status-${process.status}">${process.status.toUpperCase()}</div>
+                <div class="process">
+                    <span class="process-name">${process.name}</span>
+                    <div class="process-status ${process.status !== 'active' ? 'dead' : ''}"></div>
                 </div>
             `).join('');
         }
         
-        function updateMessagesList(messages) {
+        // Update messages
+        function updateMessages() {
             const container = document.getElementById('messages-list');
             
-            if (messages.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">Waiting for messages...</div>';
-                return;
+            let filtered = messages;
+            if (activeFilter !== 'all') {
+                if (activeFilter === 'other') {
+                    const exclude = ['PING', 'PONG', 'REGISTER', 'REGISTER_ACK', 'LOG'];
+                    filtered = messages.filter(m => !exclude.includes(m.message_type));
+                } else {
+                    const types = activeFilter.split(',');
+                    filtered = messages.filter(m => types.includes(m.message_type));
+                }
             }
             
-            container.innerHTML = messages.map(message => {
-                const timestamp = new Date(message.datetime).toLocaleTimeString();
-                const payload = JSON.stringify(message.payload, null, 2);
+            container.innerHTML = filtered.slice(0, 200).map((msg, idx) => {
+                const time = new Date(msg.datetime).toLocaleTimeString();
+                let preview = '';
+                
+                if (msg.payload) {
+                    if (msg.message_type === 'LOG') {
+                        preview = msg.payload.message || '';
+                    } else if (msg.message_type === 'PING') {
+                        preview = `Ping #${msg.payload.ping_number || ''}`;
+                    } else if (msg.payload.process_name) {
+                        preview = `Process: ${msg.payload.process_name}`;
+                    } else {
+                        preview = Object.keys(msg.payload).join(', ');
+                    }
+                }
                 
                 return `
-                    <div class="message-item">
-                        <div class="message-header">
-                            <span class="message-type">${message.message_type}</span>
-                            <span>${message.sender} - ${timestamp}</span>
-                        </div>
-                        <div class="message-content">
-                            <pre>${payload}</pre>
-                        </div>
+                    <div class="message ${selectedMessage === msg ? 'selected' : ''}" 
+                         onclick="selectMessage(${filtered.indexOf(msg)})">
+                        <span class="message-type type-${msg.message_type}">${msg.message_type}</span>
+                        <span class="message-sender">${msg.sender}</span>
+                        <span class="message-preview">${preview}</span>
+                        <span class="message-time">${time}</span>
                     </div>
                 `;
             }).join('');
         }
         
-        function updateStats(processCount, messageCount) {
-            document.getElementById('process-count').textContent = processCount;
-            document.getElementById('message-count').textContent = messageCount;
+        // Select message - SIMPLIFIED TO SHOW RAW JSON
+        function selectMessage(index) {
+            let filtered = messages;
+            if (activeFilter !== 'all') {
+                if (activeFilter === 'other') {
+                    const exclude = ['PING', 'PONG', 'REGISTER', 'REGISTER_ACK', 'LOG'];
+                    filtered = messages.filter(m => !exclude.includes(m.message_type));
+                } else {
+                    const types = activeFilter.split(',');
+                    filtered = messages.filter(m => types.includes(m.message_type));
+                }
+            }
+            
+            selectedMessage = filtered[index];
+            updateMessages();
+            
+            const detail = document.getElementById('detail-content');
+            if (selectedMessage) {
+                // Just show the raw JSON data
+                detail.innerHTML = `<pre class="raw-json">${JSON.stringify(selectedMessage, null, 2)}</pre>`;
+            }
         }
         
+        // Update message rate
+        function updateMessageRate() {
+            const elapsed = (Date.now() - messageCountStart) / 1000 / 60;
+            const rate = Math.round(messageCount / elapsed);
+            document.getElementById('message-rate').textContent = rate;
+        }
+        
+        // Filter handling
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter')) {
+                document.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
+                e.target.classList.add('active');
+                activeFilter = e.target.dataset.filter;
+                updateMessages();
+            }
+        });
+        
+        // Shutdown process
         function shutdownProcess() {
             const target = document.getElementById('shutdown-target').value.trim();
             if (!target) {
-                alert('Please enter a process name or * for all processes');
+                alert('Please enter a process name or * for all');
                 return;
             }
             
-            if (confirm(`Are you sure you want to shutdown "${target}"?`)) {
-                // This would normally send a message through the backend
-                // For now, we'll just show an alert
-                alert(`Shutdown command would be sent to: ${target}`);
+            if (confirm(`Shutdown "${target}"?`)) {
+                socket.emit('send_shutdown', { target });
                 document.getElementById('shutdown-target').value = '';
             }
         }
         
-        // Initialize everything when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            debugLog('🚀 Control Panel UI initializing...');
-            updateConnectionStatus(false);
-            loadSocketIO();
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeSocket();
+            setInterval(updateMessageRate, 5000);
         });
     </script>
 </body>

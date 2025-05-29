@@ -17,30 +17,41 @@ class BaseSubProcess:
         self.publisher = None
         self.subscriber = None
         self.registered = False
+        self.registration_complete = threading.Event()
         self.last_ping_time = time.time()
         self.shutdown_flag = threading.Event()
-        self.registration_thread = None
         self.message_thread = None
         self.main_thread = None
+        self.on_message_sent = None  # Callback for sent messages
         
     def start(self):
-        """Start the subprocess with all required threads."""
+        """Start the subprocess with proper registration flow."""
         try:
+            print(f"{self.process_name}: Setting up ZeroMQ connections...")
             self.setup_zmq()
             
-            # Start registration thread
-            self.registration_thread = threading.Thread(target=self.registration_loop, daemon=True)
-            self.registration_thread.start()
-            
-            # Start message handling thread
+            # Start message handling thread first
+            print(f"{self.process_name}: Starting message handler...")
             self.message_thread = threading.Thread(target=self.message_loop, daemon=True)
             self.message_thread.start()
+            
+            # Give message handler time to start
+            time.sleep(0.5)
+            
+            # Perform registration (BLOCKING)
+            print(f"{self.process_name}: Starting registration process...")
+            if not self.register_with_control_panel():
+                print(f"{self.process_name}: Registration failed. Shutting down.")
+                self.shutdown()
+                return
+            
+            print(f"{self.process_name}: Registration successful! Starting main loop...")
             
             # Start main process thread
             self.main_thread = threading.Thread(target=self.main_loop_wrapper, daemon=True)
             self.main_thread.start()
             
-            # Keep main thread alive and monitor for shutdown
+            # Monitor health in main thread
             self.monitor_health()
             
         except Exception as e:
@@ -55,35 +66,39 @@ class BaseSubProcess:
         self.subscriber = self.context.socket(zmq.SUB)
         self.subscriber.connect(f"tcp://localhost:{ZEROMQ_PORT + 1}")
         self.subscriber.setsockopt(zmq.SUBSCRIBE, b"")
-        self.subscriber.setsockopt(zmq.RCVTIMEO, 1000)  # 1 second timeout
-    
-    def registration_loop(self):
-        """Handle registration with ControlPanel."""
-        attempts = 0
-        max_attempts = 30
+        self.subscriber.setsockopt(zmq.RCVTIMEO, 100)  # 100ms timeout for non-blocking
         
-        while not self.registered and attempts < max_attempts:
+        # Give sockets time to connect
+        time.sleep(0.5)
+    
+    def register_with_control_panel(self):
+        """Register with ControlPanel and wait for acknowledgment."""
+        max_attempts = 30
+        retry_interval = 2
+        
+        for attempt in range(max_attempts):
             try:
+                # Send registration message
                 self.send_message(MSG_REGISTER, {
                     'process_name': self.process_name,
                     'process_id': self.process_id
                 })
                 
-                print(f"{self.process_name}: Registration attempt {attempts + 1}")
-                time.sleep(2)
-                attempts += 1
+                print(f"{self.process_name}: Registration attempt {attempt + 1}/{max_attempts}")
+                
+                # Wait for acknowledgment
+                if self.registration_complete.wait(timeout=retry_interval):
+                    return True
                 
             except Exception as e:
                 print(f"{self.process_name}: Registration error: {e}")
-                time.sleep(2)
-                attempts += 1
         
-        if not self.registered:
-            print(f"{self.process_name}: Failed to register after {max_attempts} attempts. Shutting down.")
-            self.shutdown()
+        return False
     
     def message_loop(self):
         """Handle incoming ZeroMQ messages."""
+        print(f"{self.process_name}: Message handler started")
+        
         while not self.shutdown_flag.is_set():
             try:
                 raw_message = self.subscriber.recv(zmq.NOBLOCK)
@@ -91,9 +106,11 @@ class BaseSubProcess:
                 self.handle_message(message)
                 
             except zmq.Again:
-                continue  # No message received
+                # No message available
+                time.sleep(0.01)
             except Exception as e:
-                print(f"{self.process_name}: Message handling error: {e}")
+                if not self.shutdown_flag.is_set():
+                    print(f"{self.process_name}: Message handling error: {e}")
     
     def handle_message(self, message):
         """Process incoming messages."""
@@ -103,27 +120,37 @@ class BaseSubProcess:
             sender = message.get('sender')
             
             # Handle system messages
-            if msg_type == MSG_REGISTER_ACK and sender == 'ControlPanel':
+            if msg_type == MSG_REGISTER_ACK:
+                # Check if this ACK is for us
                 if payload.get('process_name') == self.process_name:
                     self.registered = True
-                    print(f"{self.process_name}: Registration acknowledged")
+                    self.registration_complete.set()
+                    print(f"{self.process_name}: ✅ Registration acknowledged by {sender}")
             
-            elif msg_type == MSG_PING and sender == 'ControlPanel':
-                self.last_ping_time = time.time()
-                self.send_message(MSG_PONG, {'process_name': self.process_name})
+            elif msg_type == MSG_PING:
+                # Respond to all pings from ControlPanel
+                if sender == 'ControlPanel':
+                    self.last_ping_time = time.time()
+                    self.send_message(MSG_PONG, {
+                        'process_name': self.process_name,
+                        'process_id': self.process_id,
+                        'timestamp': time.time()
+                    })
+                    print(f"{self.process_name}: 🏓 PONG sent to {sender}")
             
             elif msg_type == MSG_SHUTDOWN:
                 target = payload.get('target')
                 if target == '*' or target == self.process_name:
-                    print(f"{self.process_name}: Shutdown command received")
+                    print(f"{self.process_name}: 🛑 Shutdown command received from {sender}")
                     self.shutdown()
             
-            # Handle custom messages
+            # Let subclasses handle other messages
             else:
                 self.handle_custom_message(message)
                 
         except Exception as e:
             crash_logger(f"{self.process_name}_message_handling", e)
+            print(f"{self.process_name}: Error handling message: {e}")
     
     def handle_custom_message(self, message):
         """Override this method in subclasses to handle custom messages."""
@@ -135,22 +162,25 @@ class BaseSubProcess:
             self.main_loop()
         except Exception as e:
             crash_logger(f"{self.process_name}_main_loop", e)
+            print(f"{self.process_name}: Main loop crashed: {e}")
             self.shutdown()
     
     def main_loop(self):
         """Override this method in subclasses for custom main loop logic."""
         while not self.shutdown_flag.is_set():
-            # Default behavior: log every 5 seconds
-            self.log_info(f"{self.process_name} main loop heartbeat")
-            time.sleep(5)
+            # Default behavior: log heartbeat every 10 seconds
+            self.log_info(f"{self.process_name} heartbeat - running main loop")
+            time.sleep(10)
     
     def monitor_health(self):
         """Monitor ping/pong health and shutdown if unhealthy."""
+        print(f"{self.process_name}: Health monitor started")
+        
         while not self.shutdown_flag.is_set():
             if self.registered:
                 time_since_ping = time.time() - self.last_ping_time
                 if time_since_ping > 15:  # 15 seconds without ping
-                    print(f"{self.process_name}: No ping received for 15 seconds. Shutting down.")
+                    print(f"{self.process_name}: ⚠️  No ping received for {int(time_since_ping)} seconds. Shutting down.")
                     self.shutdown()
                     break
             
@@ -166,7 +196,17 @@ class BaseSubProcess:
         }
         
         try:
-            self.publisher.send_string(json.dumps(message))
+            msg_json = json.dumps(message)
+            self.publisher.send_string(msg_json)
+            
+            # Log outgoing messages (except routine ping/pong)
+            if message_type not in [MSG_PING, MSG_PONG]:
+                print(f"{self.process_name}: 📤 Sent {message_type}")
+            
+            # Notify callback if set (for ControlPanel to capture its own messages)
+            if self.on_message_sent:
+                self.on_message_sent(message)
+            
         except Exception as e:
             print(f"{self.process_name}: Failed to send message: {e}")
     
@@ -181,7 +221,7 @@ class BaseSubProcess:
     def log_warning(self, message):
         """Send a WARNING log message to the broker."""
         self.send_message(MSG_LOG, {
-            'level': 'WARNING',
+            'level': 'WARNING', 
             'message': message
         })
     
@@ -201,8 +241,11 @@ class BaseSubProcess:
     
     def shutdown(self):
         """Gracefully shutdown the subprocess."""
-        print(f"{self.process_name}: Initiating shutdown...")
+        print(f"{self.process_name}: 🛑 Initiating shutdown...")
         self.shutdown_flag.set()
+        
+        # Give threads time to finish
+        time.sleep(0.5)
         
         # Close ZeroMQ connections
         if self.publisher:
@@ -212,7 +255,7 @@ class BaseSubProcess:
         if self.context:
             self.context.term()
         
-        print(f"{self.process_name}: Shutdown complete")
+        print(f"{self.process_name}: 🛑 Shutdown complete")
         sys.exit(0)
 
 def main():

@@ -1,7 +1,7 @@
 import sys
 import os
 
-# Add parent directories to path for imports - handle both exec and direct execution
+# Add parent directories to path for imports
 current_dir = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else os.path.dirname(os.path.abspath(sys.argv[0]))
 parent_dir = os.path.join(current_dir, '..', '..')
 parent_dir = os.path.abspath(parent_dir)
@@ -13,6 +13,7 @@ from flask_socketio import SocketIO, emit
 import threading
 import json
 import time
+from datetime import datetime
 from subprocesses.base_subprocess import BaseSubProcess
 from utils.message_types import *
 from utils.logger import crash_logger
@@ -26,6 +27,10 @@ class ControlPanel(BaseSubProcess):
         self.flask_app = None
         self.socketio = None
         self.flask_thread = None
+        
+        # Set callback to capture our own sent messages
+        self.on_message_sent = self.add_message_to_history
+        
         print(f"ControlPanel: Initialized with PID {os.getpid()}")
         
     def start(self):
@@ -43,17 +48,15 @@ class ControlPanel(BaseSubProcess):
     
     def start_flask_server(self):
         """Initialize and start Flask server with SocketIO."""
-        # Find templates folder relative to the working directory
         templates_path = os.path.join(os.getcwd(), 'templates')
         if not os.path.exists(templates_path):
-            # Try relative to parent directory
             templates_path = os.path.join(parent_dir, 'templates')
         
         print(f"ControlPanel: Using templates folder: {templates_path}")
         
         self.flask_app = Flask(__name__, template_folder=templates_path)
         self.flask_app.config['SECRET_KEY'] = 'control_panel_secret'
-        self.socketio = SocketIO(self.flask_app, cors_allowed_origins="*", logger=True, engineio_logger=True)
+        self.socketio = SocketIO(self.flask_app, cors_allowed_origins="*", logger=False, engineio_logger=False)
         
         @self.flask_app.route('/')
         def index():
@@ -62,18 +65,19 @@ class ControlPanel(BaseSubProcess):
         @self.socketio.on('connect')
         def handle_connect():
             print("ControlPanel: Client connected to SocketIO")
-            print(f"ControlPanel: Sending {len(self.registered_processes)} processes to client")
-            print(f"ControlPanel: Sending {len(self.message_history)} messages to client")
-            
-            # Send current state to new client
             emit('processes_update', list(self.registered_processes.values()))
-            emit('messages_update', self.message_history[-50:])  # Last 50 messages
-            
-            print("ControlPanel: Initial data sent to client")
+            emit('messages_update', self.message_history[-200:])  # Send last 200 messages
         
         @self.socketio.on('disconnect')
         def handle_disconnect():
             print("ControlPanel: Client disconnected from SocketIO")
+        
+        @self.socketio.on('send_shutdown')
+        def handle_shutdown_request(data):
+            target = data.get('target', '*')
+            print(f"ControlPanel: Shutdown request received for: {target}")
+            self.send_message(MSG_SHUTDOWN, {'target': target})
+            return {'status': 'sent'}
         
         # Start Flask server in separate thread
         self.flask_thread = threading.Thread(
@@ -87,19 +91,25 @@ class ControlPanel(BaseSubProcess):
             daemon=True
         )
         self.flask_thread.start()
-        time.sleep(2)  # Allow server to start
+        time.sleep(2)
         print(f"ControlPanel: Flask server started on port {CONTROL_PANEL_PORT}")
     
     def emit_to_clients(self, event, data):
         """Safely emit to all connected clients."""
         try:
             if self.socketio:
-                print(f"ControlPanel: Emitting {event} to clients: {data}")
                 self.socketio.emit(event, data)
-            else:
-                print("ControlPanel: SocketIO not available for emit")
         except Exception as e:
             print(f"ControlPanel: Error emitting {event}: {e}")
+    
+    def add_message_to_history(self, message):
+        """Add a message to history and emit to UI."""
+        self.message_history.append(message)
+        if len(self.message_history) > 1000:
+            self.message_history = self.message_history[-1000:]
+        
+        # Emit to UI
+        self.emit_to_clients('message_received', message)
     
     def handle_custom_message(self, message):
         """Handle ControlPanel-specific messages."""
@@ -122,13 +132,13 @@ class ControlPanel(BaseSubProcess):
                         'registered_at': message.get('datetime')
                     }
                     
-                    # Send acknowledgment
+                    # Send acknowledgment specifically to this process
                     self.send_message(MSG_REGISTER_ACK, {
                         'process_name': process_name,
                         'status': 'registered'
                     })
                     
-                    print(f"ControlPanel: Registered process {process_name} (PID: {process_id})")
+                    print(f"ControlPanel: ✅ Registered process {process_name} (PID: {process_id})")
                     
                     # Update UI
                     self.emit_to_clients('processes_update', list(self.registered_processes.values()))
@@ -139,62 +149,68 @@ class ControlPanel(BaseSubProcess):
                 if process_name in self.registered_processes:
                     self.registered_processes[process_name]['last_seen'] = time.time()
                     self.registered_processes[process_name]['status'] = 'active'
-                    # Don't emit on every pong to avoid spam
+                    print(f"ControlPanel: 🏓 PONG received from {process_name}")
             
-            # Store all messages for UI display
-            self.message_history.append(message)
-            if len(self.message_history) > 1000:  # Keep last 1000 messages
-                self.message_history = self.message_history[-1000:]
-            
-            # Update UI with new message (limit frequency)
-            if msg_type not in [MSG_PING, MSG_PONG]:  # Don't spam UI with ping/pong
-                self.emit_to_clients('message_received', message)
+            # Store ALL incoming messages
+            self.add_message_to_history(message)
                 
         except Exception as e:
             crash_logger("control_panel_message_handling", e)
             print(f"ControlPanel: Error in handle_custom_message: {e}")
     
     def main_loop(self):
-        """ControlPanel main loop with ping/pong and health monitoring."""
+        """ControlPanel main loop with ping/pong monitoring."""
         try:
-            print("ControlPanel: Starting main loop...")
+            print("ControlPanel: 🟢 Main loop started - will send PINGs every 5 seconds")
+            
+            # ControlPanel doesn't need to register with itself
+            self.registered = True
+            self.registered_processes["ControlPanel"] = {
+                'name': 'ControlPanel',
+                'pid': self.process_id,
+                'status': 'active',
+                'last_seen': time.time(),
+                'registered_at': datetime.now().isoformat()
+            }
+            
+            ping_count = 0
             
             while not self.shutdown_flag.is_set():
                 current_time = time.time()
+                ping_count += 1
                 
-                # Send ping to all registered processes
-                if self.registered_processes:
-                    self.send_message(MSG_PING, {'timestamp': current_time})
+                # Send ping to all processes (including self)
+                print(f"\nControlPanel: 🏓 PING #{ping_count} to all processes")
+                self.send_message(MSG_PING, {
+                    'timestamp': current_time,
+                    'ping_number': ping_count
+                })
                 
                 # Check for dead processes
                 dead_processes = []
                 for process_name, process_info in self.registered_processes.items():
-                    if current_time - process_info['last_seen'] > 15:  # 15 seconds timeout
-                        print(f"ControlPanel: Process {process_name} appears dead. Marking for removal.")
-                        dead_processes.append(process_name)
-                        process_info['status'] = 'dead'
-                        
-                        # Kill the process
-                        try:
-                            import os
-                            import signal
-                            os.kill(process_info['pid'], signal.SIGTERM)
-                        except:
-                            pass
+                    if process_name != "ControlPanel":  # Don't check self
+                        time_since_seen = current_time - process_info['last_seen']
+                        if time_since_seen > 15:  # 15 seconds timeout
+                            print(f"ControlPanel: ⚠️  Process {process_name} appears dead ({int(time_since_seen)}s since last PONG)")
+                            dead_processes.append(process_name)
+                            process_info['status'] = 'dead'
                 
                 # Remove dead processes
                 for process_name in dead_processes:
                     del self.registered_processes[process_name]
+                    print(f"ControlPanel: 🗑️  Removed dead process: {process_name}")
                 
                 # Update UI if there were changes
                 if dead_processes:
-                    print(f"ControlPanel: Updating UI after removing {len(dead_processes)} dead processes")
                     self.emit_to_clients('processes_update', list(self.registered_processes.values()))
                 
-                # Send heartbeat log
-                self.log_info(f"ControlPanel monitoring {len(self.registered_processes)} processes")
+                # Log active processes count
+                active_count = len([p for p in self.registered_processes.values() if p['status'] == 'active'])
+                print(f"ControlPanel: 📊 Active processes: {active_count}")
                 
-                time.sleep(5)  # Ping every 5 seconds
+                # Sleep for 5 seconds before next ping
+                time.sleep(5)
                 
         except Exception as e:
             crash_logger("control_panel_main_loop", e)
@@ -208,10 +224,8 @@ def main():
         print("="*50)
         print(f"Process ID: {os.getpid()}")
         print(f"Working Directory: {os.getcwd()}")
-        print(f"Python Path: {sys.path[:3]}...")  # Show first 3 entries
         
         control_panel = ControlPanel()
-        print("ControlPanel: Created successfully, starting...")
         control_panel.start()
     except Exception as e:
         crash_logger("control_panel", e)

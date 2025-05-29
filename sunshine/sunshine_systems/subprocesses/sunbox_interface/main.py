@@ -1,7 +1,7 @@
 import sys
 import os
 
-# Add parent directories to path for imports - handle both exec and direct execution
+# Add parent directories to path for imports
 current_dir = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else os.path.dirname(os.path.abspath(sys.argv[0]))
 parent_dir = os.path.join(current_dir, '..', '..')
 parent_dir = os.path.abspath(parent_dir)
@@ -15,10 +15,7 @@ import time
 
 class SunBoxInterface(BaseSubProcess):
     def __init__(self):
-        # Set the subprocess name
         super().__init__("SunBoxInterface")
-        
-        # Custom initialization for SunBoxInterface
         self.custom_data = {}
         self.iteration_count = 0
         print(f"SunBoxInterface: Initialized with PID {os.getpid()}")
@@ -37,13 +34,12 @@ class SunBoxInterface(BaseSubProcess):
             elif msg_type == 'SUNBOX_STATUS':
                 self.handle_sunbox_status(payload, sender)
             
-            elif msg_type == MSG_LOG:
-                # Process log messages from other components if needed
+            elif msg_type == MSG_LOG and sender != self.process_name:
+                # Optionally show logs from other processes
                 log_level = payload.get('level', 'INFO')
                 log_message = payload.get('message', '')
-                # Uncomment to see logs from other processes:
-                # print(f"SunBoxInterface: Received log [{log_level}] from {sender}: {log_message}")
-            
+                print(f"SunBoxInterface: 📋 [{log_level}] from {sender}: {log_message}")
+                
         except Exception as e:
             crash_logger(f"{self.process_name}_message_handling", e)
             print(f"SunBoxInterface: Error handling message: {e}")
@@ -59,20 +55,18 @@ class SunBoxInterface(BaseSubProcess):
                 value = data.get('value')
                 if key:
                     self.custom_data[key] = value
-                    self.log_info(f"SunBoxInterface: Stored data {key} = {value}")
-                    print(f"SunBoxInterface: Stored data {key} = {value}")
+                    print(f"SunBoxInterface: 💾 Stored data {key} = {value}")
             
             elif command == 'get_data':
                 key = data.get('key')
                 if key in self.custom_data:
-                    # Send response back
                     self.send_message('SUNBOX_RESPONSE', {
                         'command': 'get_data',
                         'key': key,
                         'value': self.custom_data[key]
                     })
-                    print(f"SunBoxInterface: Retrieved data {key} = {self.custom_data[key]}")
-            
+                    print(f"SunBoxInterface: 📤 Sent data {key} = {self.custom_data[key]}")
+                    
         except Exception as e:
             crash_logger(f"{self.process_name}_command_handling", e)
             print(f"SunBoxInterface: Error handling command: {e}")
@@ -80,9 +74,7 @@ class SunBoxInterface(BaseSubProcess):
     def handle_sunbox_status(self, payload, sender):
         """Handle status messages from other SunBox components."""
         try:
-            self.log_info(f"Received status from {sender}: {payload}")
-            print(f"SunBoxInterface: Status from {sender}: {payload}")
-            
+            print(f"SunBoxInterface: 📊 Status from {sender}: {payload}")
         except Exception as e:
             crash_logger(f"{self.process_name}_status_handling", e)
             print(f"SunBoxInterface: Error handling status: {e}")
@@ -90,15 +82,15 @@ class SunBoxInterface(BaseSubProcess):
     def main_loop(self):
         """Main processing loop for SunBoxInterface."""
         try:
-            print("SunBoxInterface: Starting main loop...")
+            print("SunBoxInterface: 🟢 Main loop started")
             
             while not self.shutdown_flag.is_set():
                 self.iteration_count += 1
                 
-                # Simple demo: Hello world every 5 seconds
-                hello_message = f"SunBoxInterface Hello World #{self.iteration_count}"
-                self.log_info(hello_message)
-                print(f"SunBoxInterface: {hello_message}")
+                # Log activity every 20 seconds
+                if self.iteration_count % 4 == 0:  # Every 4 iterations = 20 seconds
+                    self.log_info(f"SunBoxInterface iteration #{self.iteration_count}")
+                    print(f"\nSunBoxInterface: 🔄 Iteration #{self.iteration_count}")
                 
                 # Do SunBox-specific work
                 self.do_sunbox_work()
@@ -123,9 +115,10 @@ class SunBoxInterface(BaseSubProcess):
             self.custom_data['last_run'] = current_time
             self.custom_data['iteration'] = self.iteration_count
             
-            # Example: Monitor system, process data, etc.
-            # Add your SunBox-specific functionality here
-            
+            # Simulate some work
+            if self.iteration_count % 5 == 0:
+                print(f"SunBoxInterface: 💼 Processing SunBox data...")
+                
         except Exception as e:
             crash_logger(f"{self.process_name}_sunbox_work", e)
             print(f"SunBoxInterface: Error in SunBox work: {e}")
@@ -141,13 +134,13 @@ class SunBoxInterface(BaseSubProcess):
                 'timestamp': time.time(),
                 'sunbox_specific': {
                     'interface_version': '1.0',
-                    'active_connections': 0,  # Example data
+                    'active_connections': 0,
                     'processed_items': self.iteration_count
                 }
             }
             
             self.send_message('SUNBOX_STATUS', status_msg)
-            print(f"SunBoxInterface: Sent status update: iteration {self.iteration_count}")
+            print(f"SunBoxInterface: 📊 Sent status update")
             
         except Exception as e:
             crash_logger(f"{self.process_name}_status_update", e)
@@ -160,15 +153,14 @@ def main():
         print("="*50)
         print(f"Process ID: {os.getpid()}")
         print(f"Working Directory: {os.getcwd()}")
-        print(f"Python Path: {sys.path[:3]}...")  # Show first 3 entries
         
-        # Create and start the SunBoxInterface
         sunbox_interface = SunBoxInterface()
-        print("SunBoxInterface: Created successfully, starting...")
         sunbox_interface.start()
     except Exception as e:
         crash_logger("sunbox_interface", e)
         print(f"SunBoxInterface: Fatal error: {e}")
+        import traceback
+        traceback.print_exc()
         print("Press Enter to close this window...")
         try:
             input()
