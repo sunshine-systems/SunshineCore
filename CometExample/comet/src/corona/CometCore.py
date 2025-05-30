@@ -32,6 +32,7 @@ class CometCore:
         self.main_loop = main_loop
         self.registered = False
         self.running = True
+        self.shutdown_event = threading.Event()  # For main loop to check
         self.last_ping_time = time.time()
         self.dev_mode = "--dev" in sys.argv
         
@@ -98,16 +99,27 @@ class CometCore:
             
             # Run main loop
             if self.main_loop:
-                self.main_loop()
+                # Pass a function to check if still running
+                self.main_loop(lambda: not self.shutdown_event.is_set())
             else:
                 # Default main loop
-                while self.running:
+                while not self.shutdown_event.is_set():
                     time.sleep(1)
+            
+            # If we get here, main loop has exited cleanly
+            if not self.shutdown_event.is_set():
+                print(f"🔄 {self.name} main loop completed")
+                self._shutdown()
                     
         except Exception as e:
             print(f"❌ {self.name} error: {e}")
             log_crash(self.name, f"Fatal error during startup: {e}", e)
-            self._shutdown()
+            if not self.shutdown_event.is_set():
+                self._shutdown()
+        
+        # If we get here, main loop has exited
+        print(f"🔄 {self.name} main loop completed, shutting down...")
+        self._shutdown()
     
     def _register(self):
         """Register with ControlPanel."""
@@ -136,7 +148,7 @@ class CometCore:
     
     def _handle_system_messages(self):
         """Handle system messages separately from user messages."""
-        while self.running:
+        while not self.shutdown_event.is_set():
             try:
                 if not self.system_queue.empty():
                     flare = self.system_queue.get()
@@ -181,6 +193,7 @@ class CometCore:
                                 }
                             )
                             self.out_queue.put(ack)
+                            print(f"{self.name}: Shutdown ACK sent")
                             time.sleep(0.5)
                             self._shutdown()
                 
@@ -193,7 +206,7 @@ class CometCore:
     
     def _monitor_health(self):
         """Monitor connection health."""
-        while self.running:
+        while not self.shutdown_event.is_set():
             if self.registered:
                 time_since_ping = time.time() - self.last_ping_time
                 if time_since_ping > 15:
@@ -206,8 +219,16 @@ class CometCore:
     
     def _shutdown(self):
         """Shutdown the Comet."""
+        # Prevent multiple shutdown calls
+        if self.shutdown_event.is_set():
+            return
+            
         print(f"🛑 {self.name} shutting down...")
         self.running = False
+        self.shutdown_event.set()  # Signal main loop to stop
+        
+        # Give main loop a moment to finish
+        time.sleep(0.1)
         
         if self.on_shutdown:
             try:

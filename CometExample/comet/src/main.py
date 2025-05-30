@@ -21,13 +21,13 @@ def on_shutdown():
     """Called when Comet shuts down."""
     print("👋 CometExample shutting down gracefully")
 
-def main_loop():
+def main_loop(is_running):
     """Main processing loop."""
     global iteration_count
     
     print("🔄 CometExample main loop started")
     
-    while True:
+    while is_running():
         # Check for incoming messages
         if not in_queue.empty():
             flare = in_queue.get()
@@ -66,6 +66,8 @@ def main_loop():
             print(f"📝 CometExample iteration #{iteration_count}")
         
         time.sleep(1)
+    
+    print("🔄 CometExample main loop ended")
 
 def handle_custom_command(flare):
     """Handle custom commands."""
@@ -127,6 +129,8 @@ def send_status_update():
 
 if __name__ == "__main__":
     # Create and start the Comet
+    # Note: main_loop receives an is_running function parameter
+    # Always use while is_running(): in your main loop!
     comet = CometCore(
         name="CometExample",
         subscribe_to=["CUSTOM_COMMAND", "DATA_REQUEST", "STATUS_REQUEST"],

@@ -4,6 +4,11 @@ echo "================================================"
 echo "Creating CometExample with Corona Framework"
 echo "================================================"
 echo ""
+echo "This version includes:"
+echo "✅ Fixed shutdown handling (main loop properly exits)"
+echo "✅ Crash logging to Documents/Sunshine/Crash/"
+echo "✅ Clean folder structure with comet/ subdirectory"
+echo ""
 
 # Create directory structure
 echo "Creating directory structure..."
@@ -213,7 +218,8 @@ class Satellite:
                 else:
                     time.sleep(0.01)
             except Exception as e:
-                print(f"Satellite send error: {e}")
+                if self.running:
+                    print(f"Satellite send error: {e}")
     
     def shutdown(self):
         """Clean shutdown."""
@@ -264,6 +270,7 @@ class CometCore:
         self.main_loop = main_loop
         self.registered = False
         self.running = True
+        self.shutdown_event = threading.Event()  # For main loop to check
         self.last_ping_time = time.time()
         self.dev_mode = "--dev" in sys.argv
         
@@ -330,16 +337,27 @@ class CometCore:
             
             # Run main loop
             if self.main_loop:
-                self.main_loop()
+                # Pass a function to check if still running
+                self.main_loop(lambda: not self.shutdown_event.is_set())
             else:
                 # Default main loop
-                while self.running:
+                while not self.shutdown_event.is_set():
                     time.sleep(1)
+            
+            # If we get here, main loop has exited cleanly
+            if not self.shutdown_event.is_set():
+                print(f"🔄 {self.name} main loop completed")
+                self._shutdown()
                     
         except Exception as e:
             print(f"❌ {self.name} error: {e}")
             log_crash(self.name, f"Fatal error during startup: {e}", e)
-            self._shutdown()
+            if not self.shutdown_event.is_set():
+                self._shutdown()
+        
+        # If we get here, main loop has exited
+        print(f"🔄 {self.name} main loop completed, shutting down...")
+        self._shutdown()
     
     def _register(self):
         """Register with ControlPanel."""
@@ -368,7 +386,7 @@ class CometCore:
     
     def _handle_system_messages(self):
         """Handle system messages separately from user messages."""
-        while self.running:
+        while not self.shutdown_event.is_set():
             try:
                 if not self.system_queue.empty():
                     flare = self.system_queue.get()
@@ -413,6 +431,7 @@ class CometCore:
                                 }
                             )
                             self.out_queue.put(ack)
+                            print(f"{self.name}: Shutdown ACK sent")
                             time.sleep(0.5)
                             self._shutdown()
                 
@@ -425,7 +444,7 @@ class CometCore:
     
     def _monitor_health(self):
         """Monitor connection health."""
-        while self.running:
+        while not self.shutdown_event.is_set():
             if self.registered:
                 time_since_ping = time.time() - self.last_ping_time
                 if time_since_ping > 15:
@@ -438,8 +457,16 @@ class CometCore:
     
     def _shutdown(self):
         """Shutdown the Comet."""
+        # Prevent multiple shutdown calls
+        if self.shutdown_event.is_set():
+            return
+            
         print(f"🛑 {self.name} shutting down...")
         self.running = False
+        self.shutdown_event.set()  # Signal main loop to stop
+        
+        # Give main loop a moment to finish
+        time.sleep(0.1)
         
         if self.on_shutdown:
             try:
@@ -489,13 +516,13 @@ def on_shutdown():
     """Called when Comet shuts down."""
     print("👋 CometExample shutting down gracefully")
 
-def main_loop():
+def main_loop(is_running):
     """Main processing loop."""
     global iteration_count
     
     print("🔄 CometExample main loop started")
     
-    while True:
+    while is_running():
         # Check for incoming messages
         if not in_queue.empty():
             flare = in_queue.get()
@@ -534,6 +561,8 @@ def main_loop():
             print(f"📝 CometExample iteration #{iteration_count}")
         
         time.sleep(1)
+    
+    print("🔄 CometExample main loop ended")
 
 def handle_custom_command(flare):
     """Handle custom commands."""
@@ -595,6 +624,8 @@ def send_status_update():
 
 if __name__ == "__main__":
     # Create and start the Comet
+    # Note: main_loop receives an is_running function parameter
+    # Always use while is_running(): in your main loop!
     comet = CometCore(
         name="CometExample",
         subscribe_to=["CUSTOM_COMMAND", "DATA_REQUEST", "STATUS_REQUEST"],
@@ -844,7 +875,12 @@ System messages (handled automatically by Corona):
 ## Example Usage
 
 ```python
-# In your main_loop():
+# In your main_loop(is_running):
+
+# IMPORTANT: Check is_running() in your loop!
+while is_running():
+    # Your loop code here
+    time.sleep(1)
 
 # Send a message
 flare = SolarFlare(
@@ -859,6 +895,17 @@ out_queue.put(flare)
 if not in_queue.empty():
     flare = in_queue.get()
     print(f"Got {flare.type} from {flare.name}")
+```
+
+## Important: Main Loop
+
+Your `main_loop` function receives an `is_running` parameter - a function that returns `True` while the Comet should run and `False` when it should shut down. Always use this in your loop:
+
+```python
+def main_loop(is_running):
+    while is_running():  # ← Important!
+        # Your code here
+        time.sleep(1)
 ```
 
 ## Corona Framework
@@ -920,6 +967,12 @@ echo "    ├── Pipfile       # Dependencies"
 echo "    └── src/"
 echo "        ├── main.py   # Your code here"
 echo "        └── corona/   # Framework"
+echo ""
+echo "Key features:"
+echo "✅ Proper shutdown handling - main loop checks is_running()"
+echo "✅ Crash logging to Documents/Sunshine/Crash/"
+echo "✅ Clean separation of build scripts and code"
+echo "✅ Automatic registration and health monitoring"
 echo ""
 echo "Next steps:"
 echo "1. Test it:"

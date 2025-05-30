@@ -69,7 +69,8 @@ class Satellite:
                 else:
                     time.sleep(0.01)
             except Exception as e:
-                print(f"Satellite send error: {e}")
+                if self.running:
+                    print(f"Satellite send error: {e}")
     
     def shutdown(self):
         """Clean shutdown."""

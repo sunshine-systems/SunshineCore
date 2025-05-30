@@ -97,7 +97,12 @@ System messages (handled automatically by Corona):
 ## Example Usage
 
 ```python
-# In your main_loop():
+# In your main_loop(is_running):
+
+# IMPORTANT: Check is_running() in your loop!
+while is_running():
+    # Your loop code here
+    time.sleep(1)
 
 # Send a message
 flare = SolarFlare(
@@ -112,6 +117,17 @@ out_queue.put(flare)
 if not in_queue.empty():
     flare = in_queue.get()
     print(f"Got {flare.type} from {flare.name}")
+```
+
+## Important: Main Loop
+
+Your `main_loop` function receives an `is_running` parameter - a function that returns `True` while the Comet should run and `False` when it should shut down. Always use this in your loop:
+
+```python
+def main_loop(is_running):
+    while is_running():  # ← Important!
+        # Your code here
+        time.sleep(1)
 ```
 
 ## Corona Framework
