@@ -151,6 +151,27 @@ class ControlPanel(BaseSubProcess):
                     self.registered_processes[process_name]['status'] = 'active'
                     print(f"ControlPanel: 🏓 PONG received from {process_name}")
             
+            elif msg_type == MSG_SHUTDOWN_ACK:
+                # Handle shutdown acknowledgment
+                process_name = payload.get('process_name')
+                if process_name in self.registered_processes:
+                    print(f"ControlPanel: 📤 SHUTDOWN_ACK received from {process_name}")
+                    # Mark process as shutting down
+                    self.registered_processes[process_name]['status'] = 'shutting_down'
+                    
+                    # Update UI immediately
+                    self.emit_to_clients('processes_update', list(self.registered_processes.values()))
+                    
+                    # Remove from registered processes after a short delay
+                    def remove_process():
+                        time.sleep(1)
+                        if process_name in self.registered_processes:
+                            del self.registered_processes[process_name]
+                            print(f"ControlPanel: 🗑️  Removed {process_name} from registry")
+                            self.emit_to_clients('processes_update', list(self.registered_processes.values()))
+                    
+                    threading.Thread(target=remove_process, daemon=True).start()
+            
             # Store ALL incoming messages
             self.add_message_to_history(message)
                 
@@ -189,7 +210,7 @@ class ControlPanel(BaseSubProcess):
                 # Check for dead processes
                 dead_processes = []
                 for process_name, process_info in self.registered_processes.items():
-                    if process_name != "ControlPanel":  # Don't check self
+                    if process_name != "ControlPanel" and process_info['status'] == 'active':
                         time_since_seen = current_time - process_info['last_seen']
                         if time_since_seen > 15:  # 15 seconds timeout
                             print(f"ControlPanel: ⚠️  Process {process_name} appears dead ({int(time_since_seen)}s since last PONG)")

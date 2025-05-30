@@ -439,7 +439,7 @@
             container.innerHTML = processes.map(process => `
                 <div class="process">
                     <span class="process-name">${process.name}</span>
-                    <div class="process-status ${process.status !== 'active' ? 'dead' : ''}"></div>
+                    <div class="process-status ${process.status !== 'active' ? 'dead' : ''} style="${process.status === 'shutting_down' ? 'background: var(--warning)' : ''}""></div>
                 </div>
             `).join('');
         }

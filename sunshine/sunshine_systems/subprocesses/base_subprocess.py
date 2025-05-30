@@ -142,6 +142,20 @@ class BaseSubProcess:
                 target = payload.get('target')
                 if target == '*' or target == self.process_name:
                     print(f"{self.process_name}: 🛑 Shutdown command received from {sender}")
+                    
+                    # Send shutdown acknowledgment before shutting down
+                    self.send_message(MSG_SHUTDOWN_ACK, {
+                        'process_name': self.process_name,
+                        'process_id': self.process_id,
+                        'shutdown_target': target,
+                        'timestamp': time.time()
+                    })
+                    print(f"{self.process_name}: 📤 Sent SHUTDOWN_ACK")
+                    
+                    # Give time for the ACK to be sent
+                    time.sleep(0.5)
+                    
+                    # Now shutdown
                     self.shutdown()
             
             # Let subclasses handle other messages
