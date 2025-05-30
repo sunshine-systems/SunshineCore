@@ -1,301 +1,224 @@
-# Sunshine System Architecture
+# SunshineCore
 
-## Overview
+A distributed plugin architecture for Windows built with Python 3.12 that manages independent processes (Comets) through a ZeroMQ message broker.
 
-The Sunshine System is a distributed Windows application built with Python 3.12 that manages multiple independent subprocesses through a ZeroMQ message broker architecture. The system provides web-based authentication, real-time process monitoring, health checking, and inter-process communication.
+## 🌟 Overview
 
-## 🏗️ System Architecture
+SunshineCore is a lightweight process orchestrator that:
+- Manages a constellation of independent executable plugins (Comets)
+- Provides real-time monitoring through a web-based Control Panel
+- Handles inter-process communication via ZeroMQ
+- Ensures system health with automatic ping/pong monitoring
+- Supports both development and production deployment modes
+
+## 🏗️ Architecture
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
 │   Main Process  │    │   ZeroMQ Broker  │    │  Control Panel  │
-│   (Startup)     │    │  (Message Relay) │    │   (Web UI)      │
+│   (Launcher)    │    │  (Message Relay) │    │   (Web UI)      │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
          │                        │                        │
          └────────────────────────┼────────────────────────┘
                                   │
                     ┌─────────────┴─────────────┐
                     │                           │
-        ┌─────────────────┐          ┌─────────────────┐
-        │ SunBoxInterface │          │ Additional      │
-        │ (Worker Process)│          │ Subprocesses... │
-        └─────────────────┘          └─────────────────┘
+            ┌───────────────┐           ┌───────────────┐
+            │  Plugin Comet  │           │  Plugin Comet  │
+            │ (From Plugins) │           │ (From Plugins) │
+            └───────────────┘           └───────────────┘
 ```
 
-## 🚀 Startup Flow
+## 🚀 Installation & Usage
 
-### Phase 1: Authentication
-1. **Flask Authentication Server** starts on port 2828
-2. **Browser opens automatically** to authentication page
-3. **User clicks "Authenticate"** (mock authentication - always succeeds)
-4. **Browser window closes** and auth server shuts down
+### Prerequisites
+- Windows OS (primary support)
+- Python 3.12+
+- Git Bash or similar Unix-like shell for Windows
 
-### Phase 2: ZeroMQ Broker
-1. **Independent subprocess** starts the message broker
-2. **TCP ports 5555/5556** are bound for pub/sub messaging
-3. **Health check** confirms broker is ready
+### Development Mode
 
-### Phase 3: Subprocess Registry
-1. **Registry enumeration** reads all configured subprocesses
-2. **Each subprocess** starts in its own console window (dev mode)
-3. **Main process exits** leaving all subprocesses running independently
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd SunshineCore
 
-## 📁 Project Structure
+# Run in development mode (shows console windows)
+./run_dev.sh
+```
+
+### Production Build
+
+```bash
+# Build the executable
+./build_prod.sh
+
+# The executable will be created as sunshine_system.exe
+```
+
+## 📁 Directory Structure
 
 ```
-sunshine/
+SunshineCore/
 ├── run_dev.sh                    # Development launcher
 ├── build_prod.sh                 # Production build script
 └── sunshine_systems/
-    ├── main.py                   # Main entry point & subprocess router
+    ├── main.py                   # Main entry point
     ├── Pipfile                   # Python dependencies
-    ├── auth/
-    │   └── startup.py            # Flask authentication server
-    ├── zeromq/
-    │   └── broker.py             # ZeroMQ TCP message broker
+    ├── auth/                     # Authentication system
+    ├── zeromq/                   # Message broker
     ├── subprocesses/
-    │   ├── registry.py           # Subprocess configuration
-    │   ├── base_subprocess.py    # Base class for all subprocesses
-    │   ├── control_panel/
-    │   │   └── main.py           # Web-based monitoring & management
-    │   ├── sunbox_interface/
-    │   │   └── main.py           # Example worker subprocess
-    │   └── template_subprocess/
-    │       └── main.py           # Template for new subprocesses
-    ├── templates/
-    │   ├── auth/
-    │   │   └── index.html        # Authentication web page
-    │   └── control_panel/
-    │       └── index.html        # Real-time monitoring dashboard
-    ├── utils/
-    │   ├── message_types.py      # Standard message definitions
-    │   ├── logger.py             # Crash logging to desktop
-    │   └── process_manager.py    # Windows process utilities
-    └── config/
-        └── settings.py           # Application configuration
+    │   └── control_panel/        # Web monitoring UI
+    ├── templates/                # HTML templates
+    ├── utils/                    # Utilities
+    └── config/                   # Configuration
 ```
 
-## 🔄 Process Communication
+## 🔌 Plugin System
 
-### Message Format
-All ZeroMQ messages use standardized JSON format:
+SunshineCore automatically loads and manages executable plugins (Comets) from:
+- **Windows**: `%USERPROFILE%\Documents\Sunshine\plugins\`
+- **Mac/Linux**: `~/Documents/Sunshine/plugins/`
 
-```json
-{
-    "datetime": "2025-05-29T14:43:45.152908",
-    "message_type": "REGISTER",
-    "sender": "SunBoxInterface",
-    "payload": {
-        "process_name": "SunBoxInterface",
-        "process_id": 18100
-    }
-}
-```
+### Installing Plugins
 
-### System Message Types
+1. Download or build a `.exe` Comet
+2. Copy it to your `Documents/Sunshine/plugins/` folder
+3. Start SunshineCore - it will automatically detect and launch all plugins
 
-| Message Type | Direction | Purpose |
-|--------------|-----------|---------|
-| `REGISTER` | Subprocess → ControlPanel | Process registration request |
-| `REGISTER_ACK` | ControlPanel → Subprocess | Registration acknowledgment |
-| `PING` | ControlPanel → All | Health check probe |
-| `PONG` | Subprocess → ControlPanel | Health check response |
-| `SHUTDOWN` | ControlPanel → Target | Graceful shutdown command |
-| `LOG` | Any → All | Log message broadcast |
+### Plugin Communication
 
-### Communication Flow
+Plugins communicate using **SolarFlares** (messages) through ZeroMQ:
+- **Publisher Port**: 5555
+- **Subscriber Port**: 5556
 
-1. **Registration Phase**:
-   - New subprocess sends `REGISTER` with name and PID
-   - ControlPanel responds with `REGISTER_ACK`
-   - Process is added to monitoring list
+## 📊 Control Panel
 
-2. **Health Monitoring**:
-   - ControlPanel sends `PING` every 5 seconds
-   - All registered processes respond with `PONG`
-   - Non-responsive processes (15s timeout) are terminated
+Access the web-based control panel at: `http://localhost:2828`
 
-3. **Message Broadcasting**:
-   - Any process can send messages to all others
-   - ZeroMQ broker relays all messages to all subscribers
-   - ControlPanel displays messages in real-time web UI
+Features:
+- Real-time process monitoring
+- Live message stream
+- Process health status
+- Manual shutdown controls
+- WebSocket-based updates
 
-## 🖥️ Control Panel Features
+## 🔧 Configuration
 
-### Web Dashboard (http://127.0.0.1:2828)
-- **Real-time process monitoring** - Live status of all subprocesses
-- **Message stream** - Live view of all inter-process messages
-- **Process statistics** - Count of active processes and messages
-- **Connection status** - WebSocket connection indicator
-- **Debug information** - Real-time event logging
+Edit `config/settings.py` to modify:
+- Port numbers
+- Health check intervals
+- Message history limits
+- Timeout values
 
-### SocketIO Events
-- `processes_update` - Updates process list in UI
-- `message_received` - Displays new messages in real-time
-- `connect/disconnect` - Connection status management
+## 💬 Message Types
 
-## 🔧 Development Workflow
+### System Messages (Handled Automatically)
+- `REGISTER` / `REGISTER_ACK` - Process registration
+- `PING` / `PONG` - Health monitoring
+- `SHUTDOWN` / `SHUTDOWN_ACK` - Graceful shutdown
+- `LOG` - System logging
 
-### Running the System
-```bash
-# Development mode (with console windows)
-./run_dev.sh
+### Custom Messages
+Comets can define and use any custom message types for their specific needs.
 
-# Production build
-./build_prod.sh
-```
+## 🛠️ Creating Your Own Comet
 
-### Creating New Subprocesses
+See the [CometExample](../CometExample/README.md) project for a complete template and guide on creating your own plugins.
 
-1. **Copy Template**:
-   ```bash
-   cp -r subprocesses/template_subprocess subprocesses/my_new_process
-   ```
-
-2. **Edit Configuration**:
-   ```python
-   # In subprocesses/my_new_process/main.py
-   super().__init__("MyNewProcess")  # Change process name
-   ```
-
-3. **Register Process**:
-   ```python
-   # In subprocesses/registry.py
-   SUBPROCESS_REGISTRY = [
-       # ... existing processes ...
-       {
-           'name': 'MyNewProcess',
-           'folder': 'my_new_process',
-           'critical': False,
-           'show_console': True,
-       },
-   ]
-   ```
-
-4. **Implement Logic**:
-   - Override `handle_custom_message()` for message handling
-   - Override `main_loop()` for continuous work
-   - Use `self.log_info()`, `self.send_message()` for communication
-
-### BaseSubProcess Features
-
-Every subprocess automatically gets:
-- **Registration system** - Automatic registration with ControlPanel
-- **Health monitoring** - Responds to ping/pong automatically
-- **Message handling** - ZeroMQ pub/sub communication
-- **Graceful shutdown** - Handles shutdown commands
-- **Crash protection** - Automatic crash logging to desktop
-- **Convenience methods** - `log_info()`, `log_error()`, etc.
-
-## ⚙️ Configuration
-
-### Port Configuration
-- **Authentication**: 2828 (temporary)
-- **Control Panel**: 2828 (after auth shutdown)
-- **ZeroMQ Publisher**: 5555
-- **ZeroMQ Subscriber**: 5556
-
-### Health Monitoring
-- **Ping interval**: 5 seconds
-- **Ping timeout**: 15 seconds (process killed if no response)
-- **Registration retries**: 30 attempts, 2-second intervals
-
-### Logging
-- **Crash logs**: Written to desktop with full traceback
-- **Message history**: Last 1000 messages kept in memory
-- **Real-time display**: Filtered messages shown in Control Panel
-
-## 🛠️ Technical Details
-
-### Process Isolation
-- Each subprocess runs with **independent GIL**
-- **Separate console windows** in development mode
-- **No shared memory** - all communication via ZeroMQ
-- **Independent crash domains** - one process failure doesn't affect others
-
-### Registry System
-- **Single entry point**: All subprocesses launched via `main.py --registry ProcessName`
-- **Dynamic routing**: Registry maps process names to implementation folders
-- **Module loading**: Uses `importlib` for clean subprocess execution
-
-### Error Handling
-- **Comprehensive crash logging** with full traceback to desktop
-- **Process supervision** - ControlPanel monitors and restarts failed processes
-- **Network resilience** - Subprocesses shutdown if broker unavailable
-- **Graceful degradation** - System continues if non-critical processes fail
+Basic steps:
+1. Copy the CometExample template
+2. Implement your logic in `main.py`
+3. Build the executable
+4. Drop it in the plugins folder
 
 ## 🚨 Troubleshooting
 
+### Crash Logs
+All Comet crashes are automatically logged to:
+- **Windows**: `%USERPROFILE%\Documents\Sunshine\Crash\`
+- **Mac/Linux**: `~/Documents/Sunshine/Crash/`
+
 ### Common Issues
 
-1. **Port conflicts**: System automatically kills processes on required ports
-2. **Subprocess not starting**: Check registry configuration and folder structure
-3. **Registration failures**: Ensure ZeroMQ broker is running first
-4. **UI not updating**: Check browser console for WebSocket connection errors
+1. **Port Already in Use**
+   - SunshineCore uses ports 2828, 5555, and 5556
+   - Ensure no other applications are using these ports
 
-### Debug Information
-- **Desktop crash logs**: `sunshine_crash_[component]_[timestamp].log`
-- **Process console output**: Each subprocess has its own console window
-- **Control Panel debug panel**: Real-time event logging in web UI
-- **ZeroMQ message flow**: All messages logged in ControlPanel console
+2. **Comets Not Loading**
+   - Check the plugins directory exists
+   - Ensure Comet files are executable
+   - Check crash logs for startup errors
 
-## 🏁 Production Deployment
+3. **Registration Timeout**
+   - Ensure ZeroMQ broker is running
+   - Check firewall settings
+   - Verify network connectivity
 
-### Building Executable
+## 🔄 System Flow
+
+1. **Authentication Phase**
+   - User authenticates via web interface
+   - Browser automatically opens to auth page
+
+2. **Broker Initialization**
+   - ZeroMQ broker starts on ports 5555/5556
+   - Health check confirms broker readiness
+
+3. **Control Panel Launch**
+   - Web UI starts on port 2828
+   - WebSocket connection established
+
+4. **Plugin Discovery**
+   - Scans `Documents/Sunshine/plugins/`
+   - Launches each executable found
+
+5. **Runtime Management**
+   - Continuous health monitoring
+   - Automatic dead process cleanup
+   - Graceful shutdown handling
+
+## 📈 Development
+
+### Adding Dependencies
+
 ```bash
-./build_prod.sh
+cd sunshine_systems
+pipenv install <package-name>
 ```
 
-This creates a single `sunshine_system.exe` that includes:
-- All Python dependencies
-- HTML templates bundled
-- No console windows (except for debug)
-- Self-contained executable
+### Running Tests
 
-### System Requirements
-- **OS**: Windows (uses Windows-specific process management)
-- **Python**: 3.12+ (for development)
-- **Dependencies**: Flask, Flask-SocketIO, pyzmq (auto-installed via pipenv)
-
-## 📈 Extending the System
-
-### Custom Message Types
-```python
-# Add to utils/message_types.py
-MSG_CUSTOM_COMMAND = "CUSTOM_COMMAND"
-MSG_CUSTOM_RESPONSE = "CUSTOM_RESPONSE"
+```bash
+# Add your test commands here
 ```
 
-### Custom Subprocess Logic
-```python
-class MySubprocess(BaseSubProcess):
-    def handle_custom_message(self, message):
-        if message.get('message_type') == 'CUSTOM_COMMAND':
-            # Handle custom logic
-            self.send_message('CUSTOM_RESPONSE', {'result': 'success'})
-    
-    def main_loop(self):
-        while not self.shutdown_flag.is_set():
-            # Your continuous work here
-            self.log_info("Processing...")
-            time.sleep(1)
-```
+### Contributing
 
-### Integration Points
-- **REST APIs**: Add Flask routes to ControlPanel
-- **Database**: Add database connections to individual subprocesses  
-- **External Services**: Integrate APIs within subprocess main loops
-- **File Processing**: Handle file operations in dedicated subprocesses
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## 🎯 Design Philosophy
+
+- **Modularity**: Each Comet is completely independent
+- **Resilience**: Process failures don't affect others
+- **Observability**: Real-time monitoring of all components
+- **Simplicity**: Easy to create and deploy new Comets
+- **Flexibility**: Support for any executable as a plugin
+
+## 📝 License
+
+[Your License Here]
+
+## 🤝 Support
+
+For issues, questions, or contributions:
+- Create an issue on GitHub
+- Check existing documentation
+- Review crash logs in `Documents/Sunshine/Crash/`
 
 ---
 
-## 🎯 System Benefits
-
-- **🔧 Modular**: Easy to add/remove/modify individual components
-- **🔒 Isolated**: Process failures don't cascade to other components  
-- **📊 Observable**: Real-time monitoring and debugging capabilities
-- **⚡ Scalable**: Add new subprocesses without affecting existing ones
-- **🛡️ Resilient**: Health monitoring and automatic process management
-- **🎨 User-Friendly**: Web-based dashboard for system oversight
-
-The Sunshine System provides a robust foundation for building distributed applications with independent, communicating processes that are easy to monitor, debug, and extend.
+Built with ❤️ using Python, ZeroMQ, Flask, and SocketIO
