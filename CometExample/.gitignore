@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+comet/.venv/
+comet/Pipfile.lock
+
+# Distribution
+dist/
+build/
+*.egg-info/
+
+# PyInstaller
+*.spec
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

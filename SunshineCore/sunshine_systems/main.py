@@ -3,6 +3,7 @@ import os
 import subprocess
 import time
 import socket
+from pathlib import Path
 from auth.startup import start_auth_server
 from subprocesses.registry import SUBPROCESS_REGISTRY, get_subprocess_folder_by_name
 from utils.logger import crash_logger
@@ -56,28 +57,30 @@ def main():
             crash_logger("zeromq_broker_startup", e)
             return
         
-        # Phase 3: Start registered subprocesses
-        print("\nPhase 3: Starting Subprocesses")
+        # Phase 3: Start registered subprocesses (Control Panel)
+        print("\nPhase 3: Starting Control Panel")
         print("-" * 30)
         
-        launched_count = launch_all_subprocesses_debug(dev_mode)
+        launched_count = launch_all_subprocesses(dev_mode)
         
-        print(f"\n🚀 Launched {launched_count}/{len(SUBPROCESS_REGISTRY)} subprocess commands")
-        print("\n" + "="*50)
-        print("SUNSHINE SYSTEM STARTUP COMPLETE")
-        print("="*50)
-        print("\nAll subprocess launch commands have been issued:")
-        print("- ZeroMQ Broker (ports 5555/5556)")
-        print("- Control Panel (http://127.0.0.1:2828)")
-        print(f"- {len(SUBPROCESS_REGISTRY)} subprocess(es)")
+        # Phase 4: Start plugin Comets
+        print("\nPhase 4: Starting Plugin Comets")
+        print("-" * 30)
+        
+        plugin_count = launch_plugin_comets(dev_mode)
+        
+        print(f"\n🚀 System startup complete:")
+        print(f"   - ZeroMQ Broker (ports 5555/5556)")
+        print(f"   - Control Panel (http://127.0.0.1:2828)")
+        print(f"   - {launched_count} internal subprocess(es)")
+        print(f"   - {plugin_count} plugin Comet(s)")
         print("\nMain process exiting in 3 seconds...")
-        print("Subprocesses will continue initializing independently.")
         
-        # Brief pause then exit - all subprocesses continue running
+        # Brief pause then exit - all processes continue running
         for i in range(3, 0, -1):
             print(f"   Exiting in {i}...")
             time.sleep(1)
-        print("Main process terminated. All subprocesses continue running. ✅")
+        print("Main process terminated. All processes continue running. ✅")
         
     except Exception as e:
         crash_logger("main_application", e)
@@ -85,19 +88,83 @@ def main():
         print("Crash dump written to desktop.")
         import traceback
         traceback.print_exc()
-        # Don't use sys.exit, just return
         return
 
-def launch_all_subprocesses_debug(dev_mode):
-    """DEBUG VERSION - Launch all subprocesses with extensive logging."""
-    print(f"🚀 DEBUG SUBPROCESS LAUNCHER")
-    print(f"📋 Registry contains {len(SUBPROCESS_REGISTRY)} processes:")
-    for i, config in enumerate(SUBPROCESS_REGISTRY):
-        print(f"   {i+1}. {config['name']} ({config['folder']})")
+def launch_plugin_comets(dev_mode):
+    """Launch all Comets found in the user's Documents/Sunshine/plugins directory."""
+    # Get user's Documents folder
+    if os.name == 'nt':  # Windows
+        documents_path = os.path.join(os.environ['USERPROFILE'], 'Documents')
+    else:  # Linux/Mac
+        documents_path = os.path.join(os.path.expanduser('~'), 'Documents')
     
+    plugins_dir = os.path.join(documents_path, 'Sunshine', 'plugins')
+    
+    # Create plugins directory if it doesn't exist
+    if not os.path.exists(plugins_dir):
+        try:
+            os.makedirs(plugins_dir)
+            print(f"   Created plugins directory: {plugins_dir}")
+        except Exception as e:
+            print(f"   Failed to create plugins directory: {e}")
+            return 0
+    
+    # Look for executables (with or without .exe extension)
+    plugin_files = []
+    if os.name == 'nt':
+        plugin_files = list(Path(plugins_dir).glob('*.exe'))
+    else:
+        # On Unix, executables might not have extension
+        for file in Path(plugins_dir).iterdir():
+            if file.is_file() and os.access(file, os.X_OK):
+                plugin_files.append(file)
+    
+    if not plugin_files:
+        print(f"   No plugin Comets found in: {plugins_dir}")
+        return 0
+    
+    print(f"   Found {len(plugin_files)} Comet(s) in: {plugins_dir}")
+    
+    launched = 0
+    for plugin_file in plugin_files:
+        try:
+            print(f"\n🌟 Launching Comet: {plugin_file.name}")
+            
+            cmd = [str(plugin_file)]
+            if dev_mode:
+                cmd.append('--dev')
+            
+            if os.name == 'nt':  # Windows
+                if dev_mode:
+                    proc = subprocess.Popen(
+                        cmd,
+                        creationflags=subprocess.CREATE_NEW_CONSOLE,
+                        cwd=plugins_dir
+                    )
+                else:
+                    proc = subprocess.Popen(
+                        cmd,
+                        creationflags=subprocess.CREATE_NO_WINDOW,
+                        cwd=plugins_dir
+                    )
+            else:  # Linux/Mac
+                proc = subprocess.Popen(cmd, cwd=plugins_dir)
+            
+            print(f"   ✅ Launched {plugin_file.name} (PID: {proc.pid})")
+            launched += 1
+            
+            # Small delay between launches
+            time.sleep(0.5)
+            
+        except Exception as e:
+            print(f"   ❌ Failed to launch {plugin_file.name}: {e}")
+    
+    return launched
+
+def launch_all_subprocesses(dev_mode):
+    """Launch all internal subprocesses."""
     launched_count = 0
     
-    # Launch ALL subprocesses
     for i, config in enumerate(SUBPROCESS_REGISTRY):
         process_num = i + 1
         
@@ -107,27 +174,15 @@ def launch_all_subprocesses_debug(dev_mode):
         
         try:
             cmd = [sys.executable, 'main.py', '--registry', config['name']]
-            print(f"📋 Command: {' '.join(cmd)}")
-            print(f"📁 Working Dir: {os.getcwd()}")
-            print(f"🖥️  Show Console: {config.get('show_console', True)}")
             
             if dev_mode and config.get('show_console', True):
                 if os.name == 'nt':  # Windows
-                    print(f"🪟 Creating Windows console window...")
-                    # Store process reference to check if it started
                     proc = subprocess.Popen(
                         cmd,
                         creationflags=subprocess.CREATE_NEW_CONSOLE,
                         cwd=os.getcwd()
                     )
                     print(f"   ✅ {config['name']} launched with PID: {proc.pid}")
-                    
-                    # Brief check to see if process is still alive
-                    time.sleep(0.2)
-                    if proc.poll() is not None:
-                        print(f"   ⚠️  Process exited immediately with code: {proc.returncode}")
-                    else:
-                        print(f"   ✅ Process still running after 0.2s")
                 else:  # Linux/Mac
                     proc = subprocess.Popen(cmd, cwd=os.getcwd())
                     print(f"   ✅ {config['name']} launched")
@@ -143,23 +198,9 @@ def launch_all_subprocesses_debug(dev_mode):
                 print(f"   ✅ {config['name']} background launched")
             
             launched_count += 1
-            print(f"✅ Successfully launched {config['name']}")
             
-            # Small delay between launches
-            if process_num < len(SUBPROCESS_REGISTRY):
-                print(f"⏳ Waiting 0.5s before next process...")
-                time.sleep(0.5)
-                
         except Exception as e:
             print(f"❌ Failed to launch {config['name']}: {e}")
-            import traceback
-            traceback.print_exc()
-            # Continue launching others
-    
-    print(f"\n{'='*60}")
-    print(f"🏁 All launch attempts completed!")
-    print(f"✅ Successfully launched: {launched_count}/{len(SUBPROCESS_REGISTRY)}")
-    print(f"{'='*60}")
     
     return launched_count
 
@@ -229,28 +270,15 @@ def start_zeromq_broker_subprocess(dev_mode):
     
     if dev_mode:
         if os.name == 'nt':  # Windows
-            # Use CREATE_NEW_CONSOLE only for visible console
             subprocess.Popen(
                 cmd,
                 creationflags=subprocess.CREATE_NEW_CONSOLE,
                 cwd=os.getcwd()
             )
         else:  # Linux/Mac
-            terminals = ['gnome-terminal', 'xterm', 'konsole', 'x-terminal-emulator']
-            for terminal in terminals:
-                try:
-                    if terminal == 'gnome-terminal':
-                        subprocess.Popen([terminal, '--', *cmd], cwd=os.getcwd())
-                    else:
-                        subprocess.Popen([terminal, '-e'] + cmd, cwd=os.getcwd())
-                    break
-                except FileNotFoundError:
-                    continue
-            else:
-                subprocess.Popen(cmd, cwd=os.getcwd())
+            subprocess.Popen(cmd, cwd=os.getcwd())
     else:
         if os.name == 'nt':  # Windows
-            # Use CREATE_NO_WINDOW for background process
             subprocess.Popen(
                 cmd,
                 cwd=os.getcwd(),
